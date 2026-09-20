@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreeNovel</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header>
+  <a href="./" class="logo">📚 FreeNovel</a>
+</header>
+
+<div class="book" style="background:white;margin:15px;border-radius:18px;padding:18px;text-align:center;">
+  <img id="cover" class="cover" style="width:150px;border-radius:10px;">
+  <h2 id="title"></h2>
+  <p id="author"></p>
+  <p id="genre"></p>
+
+  <a id="readBtn" class="read" href="reader.html">Start Reading</a>
+</div>
+
+<script>
+const id=new URLSearchParams(location.search).get("id");
+
+fetch("data/novels.json")
+.then(r=>r.json())
+.then(novels=>{
+ const n=novels.find(x=>x.id===id);
+ if(!n)return;
+
+ document.title=n.title+" - FreeNovel";
+ cover.src=n.cover;
+ title.innerText=n.title;
+ author.innerText="By "+n.author;
+ genre.innerText=n.genre+" • "+n.chapters+" Chapters • "+n.status;
+ readBtn.href="reader.html?id="+n.id;
+});
+</script>
+
+</body>
+</html>
