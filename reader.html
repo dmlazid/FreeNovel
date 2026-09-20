@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreeNovel Reader</title>
+
+<style>
+body{
+margin:0;
+font-family:Georgia,serif;
+background:#fafafa;
+line-height:1.9;
+}
+header{
+background:#00897B;
+color:white;
+padding:15px;
+}
+.content{
+padding:22px;
+font-size:20px;
+white-space:pre-wrap;
+}
+.nav{
+display:flex;
+justify-content:space-between;
+padding:20px;
+}
+button{
+background:#00897B;
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:25px;
+}
+#chapterList{
+padding:15px;
+background:white;
+}
+#chapterList button{
+display:block;
+width:100%;
+margin:6px 0;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2 id="title">Loading...</h2>
+<p id="chapterName"></p>
+</header>
+
+<div id="chapterList"></div>
+
+<div class="content" id="content"></div>
+
+<div class="nav">
+<button onclick="prev()">◀ Previous</button>
+<button onclick="next()">Next ▶</button>
+</div>
+
+<script>
+let novel,current=0;
+
+fetch("data/demo.json")
+.then(r=>r.json())
+.then(data=>{
+novel=data;
+document.getElementById("title").innerText=data.title;
+buildList();
+loadChapter(0);
+});
+
+function buildList(){
+const list=document.getElementById("chapterList");
+novel.chapters.forEach((c,i)=>{
+const b=document.createElement("button");
+b.innerText=c.title;
+b.onclick=()=>loadChapter(i);
+list.appendChild(b);
+});
+}
+
+function loadChapter(i){
+current=i;
+document.getElementById("chapterName").innerText=novel.chapters[i].title;
+fetch(novel.chapters[i].file)
+.then(r=>r.text())
+.then(t=>{
+document.getElementById("content").innerText=t;
+window.scrollTo(0,0);
+localStorage.setItem("demo-progress",i);
+});
+}
+
+function prev(){
+if(current>0) loadChapter(current-1);
+}
+
+function next(){
+if(current<novel.chapters.length-1)
+loadChapter(current+1);
+}
+</script>
+
+</body>
+</html>
