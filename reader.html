@@ -1,108 +1,210 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FreeNovel Reader</title>
+<title>FreeNovel</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
+*{margin:0;padding:0;box-sizing:border-box}
 body{
-margin:0;
-font-family:Georgia,serif;
-background:#fafafa;
-line-height:1.9;
+font-family:Poppins,sans-serif;
+background:#eef1f3;
+color:#222;
 }
-header{
+.topbar{
 background:#00897B;
 color:white;
 padding:15px;
-}
-.content{
-padding:22px;
-font-size:20px;
-white-space:pre-wrap;
-}
-.nav{
 display:flex;
 justify-content:space-between;
-padding:20px;
+align-items:center;
+position:sticky;
+top:0;
 }
-button{
+.logo{font-weight:700;font-size:22px}
+.icon{font-size:24px}
+
+.breadcrumb{
+background:white;
+padding:12px 18px;
+font-size:14px;
+color:#666;
+}
+
+.book{
+background:white;
+margin:15px;
+border-radius:18px;
+padding:18px;
+text-align:center;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.cover{
+width:120px;
+height:170px;
+border-radius:12px;
+object-fit:cover;
+margin:auto;
+display:block;
+}
+
+.book h2{
+margin:12px 0 6px;
+font-size:22px;
+}
+
+.chapter-title{
+font-size:18px;
+color:#666;
+}
+
+.chapter-list{
+display:flex;
+gap:10px;
+overflow:auto;
+padding:15px;
+}
+
+.chapter-list button{
 background:#00897B;
 color:white;
 border:none;
-padding:12px 18px;
-border-radius:25px;
+padding:10px 18px;
+border-radius:20px;
+white-space:nowrap;
 }
-#chapterList{
-padding:15px;
+
+.reader{
 background:white;
+margin:15px;
+border-radius:18px;
+padding:22px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+line-height:2;
+font-size:19px;
+white-space:pre-wrap;
 }
-#chapterList button{
-display:block;
-width:100%;
-margin:6px 0;
+
+.controls{
+display:flex;
+justify-content:space-between;
+padding:15px;
+}
+
+.controls button{
+background:#00897B;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:25px;
+font-size:16px;
+}
+
+.tools{
+display:flex;
+justify-content:center;
+gap:18px;
+padding:15px;
+}
+
+.tools button{
+background:white;
+border:none;
+width:50px;
+height:50px;
+border-radius:50%;
+font-size:20px;
+box-shadow:0 3px 8px rgba(0,0,0,.12);
 }
 </style>
 </head>
 
 <body>
 
-<header>
+<div class="topbar">
+<div class="logo">📚 FreeNovel</div>
+<div class="icon">☰</div>
+</div>
+
+<div class="breadcrumb">
+Home › Demo Survival Novel
+</div>
+
+<div class="book">
+<img class="cover" src="https://picsum.photos/300/420?random=1">
 <h2 id="title">Loading...</h2>
-<p id="chapterName"></p>
-</header>
+<div class="chapter-title" id="chapterName"></div>
+</div>
 
-<div id="chapterList"></div>
+<div class="chapter-list" id="chapterList"></div>
 
-<div class="content" id="content"></div>
+<div class="tools">
+<button onclick="changeSize(-1)">A−</button>
+<button onclick="toggleDark()">🌙</button>
+<button onclick="changeSize(1)">A+</button>
+</div>
 
-<div class="nav">
-<button onclick="prev()">◀ Previous</button>
+<div class="reader" id="content"></div>
+
+<div class="controls">
+<button onclick="prev()">◀ Prev</button>
 <button onclick="next()">Next ▶</button>
 </div>
 
 <script>
-let novel,current=0;
+let novel,current=0,font=19;
 
 fetch("data/demo.json")
 .then(r=>r.json())
 .then(data=>{
 novel=data;
-document.getElementById("title").innerText=data.title;
+title.innerText=data.title;
 buildList();
-loadChapter(0);
+loadChapter(localStorage.getItem("demo-progress")||0);
 });
 
 function buildList(){
-const list=document.getElementById("chapterList");
+chapterList.innerHTML="";
 novel.chapters.forEach((c,i)=>{
-const b=document.createElement("button");
-b.innerText=c.title;
+let b=document.createElement("button");
+b.innerText=(i+1);
 b.onclick=()=>loadChapter(i);
-list.appendChild(b);
+chapterList.appendChild(b);
 });
 }
 
 function loadChapter(i){
-current=i;
-document.getElementById("chapterName").innerText=novel.chapters[i].title;
-fetch(novel.chapters[i].file)
+current=Number(i);
+chapterName.innerText=novel.chapters[current].title;
+fetch(novel.chapters[current].file)
 .then(r=>r.text())
 .then(t=>{
-document.getElementById("content").innerText=t;
+content.innerText=t;
 window.scrollTo(0,0);
-localStorage.setItem("demo-progress",i);
+localStorage.setItem("demo-progress",current);
 });
 }
 
-function prev(){
-if(current>0) loadChapter(current-1);
+function prev(){if(current>0)loadChapter(current-1);}
+function next(){if(current<novel.chapters.length-1)loadChapter(current+1);}
+function changeSize(x){
+font+=x;
+content.style.fontSize=font+"px";
 }
-
-function next(){
-if(current<novel.chapters.length-1)
-loadChapter(current+1);
+function toggleDark(){
+document.body.classList.toggle("dark");
+if(document.body.classList.contains("dark")){
+document.body.style.background="#111";
+document.body.style.color="white";
+}else{
+document.body.style.background="#eef1f3";
+document.body.style.color="#222";
+}
 }
 </script>
 
