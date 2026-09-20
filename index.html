@@ -101,12 +101,13 @@ function showNovels(novels){
       </div>
     `;
 
-    latest.innerHTML+=card;
-    popular.innerHTML+=card;
+    latest.innerHTML += card;
 
-    if(n.status==="Completed"){
-      completed.innerHTML+=card;
-    }
+if (n.status === "Completed") {
+  completed.innerHTML += card;
+} else {
+  popular.innerHTML += card;
+}
   });
 }
 </script>
