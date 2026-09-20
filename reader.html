@@ -157,54 +157,56 @@ Home › Demo Survival Novel
 </div>
 
 <script>
-let novel,current=0,font=19;
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+const chapter = Number(params.get("chapter") || 1);
 
-fetch("data/demo.json")
-.then(r=>r.json())
-.then(data=>{
-novel=data;
-title.innerText=data.title;
-buildList();
-loadChapter(localStorage.getItem("demo-progress")||0);
+fetch("data/novels.json")
+.then(r => r.json())
+.then(novels => {
+  const n = novels.find(book => book.id === id);
+  if (!n) return;
+
+  document.getElementById("title").innerText = n.title;
+  document.getElementById("chapterName").innerText = "Chapter " + chapter;
+  document.querySelector(".cover").src = n.cover;
+  document.querySelector(".breadcrumb").innerHTML =
+    `<button class="home-btn" onclick="window.location.href='./index.html'">🏠 Home</button> › ${n.title}`;
+
+  document.getElementById("content").innerHTML = `
+    <p><b>${n.title} - Chapter ${chapter}</b></p>
+    <p>This is Chapter ${chapter} of ${n.title}.</p>
+    <p>Author: ${n.author}</p>
+    <p>Genre: ${n.genre}</p>
+    <p>Story continues here...</p>`;
+
+  const list = document.getElementById("chapterList");
+  list.innerHTML = "";
+  const max = Math.min(n.chapters, 20);
+
+  for (let i = 1; i <= max; i++) {
+    list.innerHTML += `
+      <button onclick="window.location.href='reader.html?id=${n.id}&chapter=${i}'">${i}</button>`;
+  }
 });
 
-function buildList(){
-chapterList.innerHTML="";
-novel.chapters.forEach((c,i)=>{
-let b=document.createElement("button");
-b.innerText=(i+1);
-b.onclick=()=>loadChapter(i);
-chapterList.appendChild(b);
-});
+function prev() {
+  const p = Math.max(1, chapter - 1);
+  window.location.href = `reader.html?id=${id}&chapter=${p}`;
 }
 
-function loadChapter(i){
-current=Number(i);
-chapterName.innerText=novel.chapters[current].title;
-fetch(novel.chapters[current].file)
-.then(r=>r.text())
-.then(t=>{
-content.innerText=t;
-window.scrollTo(0,0);
-localStorage.setItem("demo-progress",current);
-});
+function next() {
+  window.location.href = `reader.html?id=${id}&chapter=${chapter + 1}`;
 }
 
-function prev(){if(current>0)loadChapter(current-1);}
-function next(){if(current<novel.chapters.length-1)loadChapter(current+1);}
+let font = 19;
 function changeSize(x){
-font+=x;
-content.style.fontSize=font+"px";
+  font += x;
+  document.getElementById("content").style.fontSize = font + "px";
 }
+
 function toggleDark(){
-document.body.classList.toggle("dark");
-if(document.body.classList.contains("dark")){
-document.body.style.background="#111";
-document.body.style.color="white";
-}else{
-document.body.style.background="#eef1f3";
-document.body.style.color="#222";
-}
+  document.body.classList.toggle("dark");
 }
 </script>
 
