@@ -148,18 +148,19 @@ background:#00897B;
 </div>
 
 <footer>© 2026 FreeNovel</footer>
+
+<script>
 function openMenu(){
-document.getElementById("sideMenu").style.width="260px";
+  document.getElementById("sideMenu").style.width="260px";
 }
 
 function closeMenu(){
-document.getElementById("sideMenu").style.width="0";
+  document.getElementById("sideMenu").style.width="0";
 }
-<script>
-fetch("data/novels.json")
-.then(r=>r.json())
-.then(showNovels);
 
+fetch("data/novels.json")
+  .then(r=>r.json())
+  .then(showNovels);
 function showNovels(novels){
 
 const latest=document.getElementById("latest");
