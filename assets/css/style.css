@@ -25,6 +25,10 @@ z-index:100;
 .logo{
 font-size:28px;
 font-weight:bold;
+color:white;
+text-decoration:none;
+user-select:none;
+-webkit-user-select:none;
 }
 
 .menu{
