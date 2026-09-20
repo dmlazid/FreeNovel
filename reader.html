@@ -173,8 +173,11 @@ fetch(`data/${id}.json`)
   document.querySelector(".cover").src = data.cover;
   document.querySelector(".breadcrumb #crumb").innerText = data.title;
 
-  document.getElementById("content").innerText = data.chapters[chapter - 1].content;
-
+  fetch(data.chapters[chapter - 1].file)
+  .then(r => r.text())
+  .then(text => {
+    document.getElementById("content").innerText = text;
+  });
   const list = document.getElementById("chapterList");
   list.innerHTML = "";
 
