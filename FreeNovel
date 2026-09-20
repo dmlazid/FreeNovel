@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreeNovel - Read Free Novels Online</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+font-family:Arial,sans-serif;
+background:#f4f6f8;
+color:#222;
+}
+header{
+background:#00897B;
+color:white;
+padding:15px;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:24px;
+font-weight:bold;
+}
+.hero{
+padding:35px 20px;
+text-align:center;
+background:white;
+}
+.hero h1{
+font-size:32px;
+margin-bottom:10px;
+}
+.hero p{
+color:#666;
+}
+.card{
+background:white;
+margin:20px;
+padding:20px;
+border-radius:18px;
+box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+button{
+background:#00897B;
+color:white;
+border:none;
+padding:12px 22px;
+border-radius:30px;
+font-size:16px;
+}
+footer{
+text-align:center;
+padding:20px;
+color:#666;
+}
+</style>
+</head>
+<body>
+
+<header>📚 FreeNovel</header>
+
+<section class="hero">
+<h1>Read Free Novels Online</h1>
+<p>Fast • Mobile Friendly • Free</p>
+</section>
+
+<div class="card">
+<h2>Welcome to FreeNovel</h2>
+<p>This is your first novel website. We'll add covers, chapters, search, and dark mode next.</p>
+<br>
+<button>Read Now</button>
+</div>
+
+<footer>© 2026 FreeNovel</footer>
+
+</body>
+</html>
