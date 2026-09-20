@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreeNovel Admin</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+body{
+font-family:Arial;
+background:#eef2f3;
+padding:20px;
+}
+input,textarea{
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+textarea{
+height:260px;
+}
+button{
+background:#00897B;
+color:white;
+padding:14px;
+border:none;
+border-radius:10px;
+width:100%;
+font-size:16px;
+}
+</style>
+
+</head>
+<body>
+
+<h2>📚 Upload Novel</h2>
+
+<input id="title" placeholder="Novel title">
+
+<input id="author" placeholder="Author">
+
+<input id="genre" placeholder="Genre">
+
+<input id="cover" placeholder="Cover image URL">
+
+<textarea id="text"
+placeholder="Paste your whole novel here.
+
+Example:
+
+Chapter 1
+Story...
+
+Chapter 2
+More story...
+"></textarea>
+
+<button onclick="build()">Generate ZIP</button>
+
+<script>
+
+async function build(){
+
+const title=titleInput("title");
+const author=titleInput("author");
+const genre=titleInput("genre");
+const cover=titleInput("cover");
+
+const id=title.toLowerCase()
+.replace(/[^a-z0-9]+/g,"-");
+
+const raw=document.getElementById("text").value;
+
+const chapters=raw.split(/(?=Chapter\s+\d+)/i)
+.filter(x=>x.trim());
+
+const zip=new JSZip();
+
+const chapterFolder=zip.folder("chapters").folder(id);
+
+const json={
+title,
+author,
+cover,
+description:"",
+chapters:[]
+};
+
+chapters.forEach((c,i)=>{
+
+chapterFolder.file(`ch${i+1}.txt`,c.trim());
+
+json.chapters.push({
+title:`Chapter ${i+1}`,
+file:`chapters/${id}/ch${i+1}.txt`
+});
+
+});
+
+zip.folder("data")
+.file(`${id}.json`,
+JSON.stringify(json,null,2));
+
+zip.file("ADD_TO_NOVELS_JSON.txt",
+`{
+"id":"${id}",
+"title":"${title}",
+"author":"${author}",
+"cover":"${cover}",
+"chapters":${chapters.length},
+"status":"Ongoing",
+"genre":"${genre}"
+}`);
+
+const blob=await zip.generateAsync({type:"blob"});
+
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download=`${id}.zip`;
+a.click();
+
+}
+
+function titleInput(id){
+return document.getElementById(id).value.trim();
+}
+
+</script>
+
+</body>
+</html>
