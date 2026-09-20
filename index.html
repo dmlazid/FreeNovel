@@ -74,15 +74,49 @@ text-align:center;
 padding:25px;
 color:#666;
 }
+  .side-menu{
+height:100%;
+width:0;
+position:fixed;
+top:0;
+left:0;
+background:#00695C;
+overflow-x:hidden;
+transition:.3s;
+padding-top:60px;
+z-index:999;
+}
+
+.side-menu a{
+display:block;
+color:white;
+padding:16px 24px;
+text-decoration:none;
+font-size:18px;
+}
+
+.side-menu a:hover{
+background:#00897B;
+}
 </style>
 </head>
 <body>
 
 <header>
 <div class="logo">📚 FreeNovel</div>
-<div class="menu">☰</div>
+<div class="menu" onclick="openMenu()">☰</div>
 </header>
+<div id="sideMenu" class="side-menu">
 
+<a href="javascript:void(0)" onclick="closeMenu()">✕ Close</a>
+
+<a href="#">🏠 Home</a>
+<a href="#">🔥 Popular</a>
+<a href="#">🆕 Latest</a>
+<a href="#">📚 Categories</a>
+<a href="#">⭐ Completed</a>
+
+</div>
 <div class="search">
 <input type="text" placeholder="Search novels...">
 </div>
@@ -114,7 +148,13 @@ color:#666;
 </div>
 
 <footer>© 2026 FreeNovel</footer>
+function openMenu(){
+document.getElementById("sideMenu").style.width="260px";
+}
 
+function closeMenu(){
+document.getElementById("sideMenu").style.width="0";
+}
 <script>
 fetch("data/novels.json")
 .then(r=>r.json())
