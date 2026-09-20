@@ -65,3 +65,45 @@ function showNovels(novels) {
     }
   });
 }
+// Filter novels by genre
+function filterGenre(genre){
+
+  const latest=document.getElementById("latest");
+  const popular=document.getElementById("popular");
+  const completed=document.getElementById("completed");
+
+  latest.innerHTML="";
+  popular.innerHTML="";
+  completed.innerHTML="";
+
+  fetch("data/novels.json")
+    .then(r=>r.json())
+    .then(novels=>{
+
+      novels
+      .filter(n=>n.genre===genre)
+      .forEach(n=>{
+
+        const card=`
+          <div class="card">
+            <img src="${n.cover}">
+            <div class="info">
+              <h3>${n.title}</h3>
+              <p>${n.author}</p>
+              <p>${n.genre} • ${n.chapters} Chapters • ${n.status}</p>
+              <a class="read" href="reader.html">Read Now</a>
+            </div>
+          </div>
+        `;
+
+        latest.innerHTML+=card;
+        popular.innerHTML+=card;
+
+        if(n.status==="Completed"){
+          completed.innerHTML+=card;
+        }
+      });
+
+    });
+
+}
