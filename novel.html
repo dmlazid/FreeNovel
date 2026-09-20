@@ -19,7 +19,21 @@
   <p id="genre"></p>
   <div id="chapterList" style="margin-top:20px;"></div>
 
-  <a id="readBtn" class="read" href="reader.html">Start Reading</a>
+  const list=document.getElementById("chapterList");
+list.innerHTML="";
+
+const max=Math.min(n.chapters,20);
+
+for(let i=1;i<=max;i++){
+  list.innerHTML+=`
+    <a href="reader.html?id=${n.id}&chapter=${i}"
+       class="read"
+       style="display:block;margin:10px 0;">
+      Chapter ${i}
+    </a>`;
+}
+
+readBtn.href="reader.html?id="+n.id+"&chapter=1";
 </div>
 
 <script>
