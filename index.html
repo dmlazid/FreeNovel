@@ -1,58 +1,125 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TreeNovel</title>
+<title>FreeNovel</title>
+
 <style>
-body{
-margin:0;
-font-family:Arial,sans-serif;
-background:#f4f6f8;
-}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f3f5f7}
 header{
 background:#00897B;
 color:white;
 padding:15px;
-text-align:center;
-font-size:24px;
-font-weight:bold;
+display:flex;
+justify-content:space-between;
+align-items:center;
+position:sticky;
+top:0;
 }
-.hero{
-padding:30px;
-text-align:center;
-}
-.card{
+.logo{font-size:24px;font-weight:bold}
+.menu{font-size:28px;cursor:pointer}
+.search{
+padding:15px;
 background:white;
-margin:20px;
-padding:20px;
-border-radius:15px;
-box-shadow:0 4px 10px rgba(0,0,0,.1);
 }
-button{
+.search input{
+width:100%;
+padding:12px;
+border:1px solid #ccc;
+border-radius:25px;
+}
+.categories{
+display:flex;
+overflow-x:auto;
+gap:10px;
+padding:15px;
+background:white;
+}
+.categories button{
 background:#00897B;
 color:white;
 border:none;
-padding:12px 20px;
-border-radius:30px;
+padding:10px 18px;
+border-radius:20px;
+white-space:nowrap;
+}
+.section{padding:20px}
+.card{
+background:white;
+border-radius:18px;
+overflow:hidden;
+box-shadow:0 5px 15px rgba(0,0,0,.08);
+margin-bottom:20px;
+}
+.card img{
+width:100%;
+height:220px;
+object-fit:cover;
+}
+.info{padding:15px}
+.read{
+display:inline-block;
+margin-top:10px;
+background:#00897B;
+color:white;
+padding:10px 20px;
+border-radius:20px;
+text-decoration:none;
+}
+footer{
+text-align:center;
+padding:25px;
+color:#666;
 }
 </style>
 </head>
 <body>
 
-<header>📚 TreeNovel</header>
+<header>
+<div class="logo">📚 FreeNovel</div>
+<div class="menu">☰</div>
+</header>
 
-<div class="hero">
-<h1>Read Free Novels</h1>
-<p>Mobile Friendly • Dark Mode Coming Soon</p>
+<div class="search">
+<input type="text" placeholder="Search novels...">
+</div>
+
+<div class="categories">
+<button>Fantasy</button>
+<button>Action</button>
+<button>Romance</button>
+<button>Horror</button>
+<button>Comedy</button>
+<button>Sci-Fi</button>
+</div>
+
+<div class="section">
+<h2>Latest Updates</h2>
+
+<div class="card">
+<img src="https://picsum.photos/400/220?random=1">
+<div class="info">
+<h3>Demo Survival Novel</h3>
+<p>Begin your adventure with a small shelter and survive.</p>
+<a class="read" href="novels/demo/chapter1.html">Read</a>
+</div>
 </div>
 
 <div class="card">
-<h2>Demo Novel</h2>
-<p>Your first novel will appear here.</p>
-<button>Read Now</button>
+<img src="https://picsum.photos/400/220?random=2">
+<div class="info">
+<h3>Mystery Detective</h3>
+<p>Solve impossible crimes one chapter at a time.</p>
+<a class="read" href="#">Coming Soon</a>
 </div>
+</div>
+
+</div>
+
+<footer>© 2026 FreeNovel</footer>
 
 </body>
 </html>
