@@ -1,0 +1,15 @@
+{
+  "title": "Dragon King",
+  "author": "Me",
+  "cover": "https://picsum.photos/300/420?random=5",
+  "chapters": [
+    {
+      "title": "Chapter 1",
+      "file": "chapters/dragon/ch1.txt"
+    },
+    {
+      "title": "Chapter 2",
+      "file": "chapters/dragon/ch2.txt"
+    }
+  ]
+}
