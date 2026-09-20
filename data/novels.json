@@ -16,14 +16,14 @@
     "chapters": 120,
     "status": "Completed",
     "genre": "Mystery"
+  },
+  {
+    "id": "dragon",
+    "title": "Dragon King",
+    "author": "Me",
+    "cover": "https://picsum.photos/300/420?random=5",
+    "chapters": 500,
+    "status": "Ongoing",
+    "genre": "Fantasy"
   }
 ]
-{
-"id":"dragon",
-"title":"Dragon King",
-"author":"Me",
-"cover":"https://picsum.photos/300/420?random=5",
-"chapters":500,
-"status":"Ongoing",
-"genre":"Fantasy"
-}
