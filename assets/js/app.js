@@ -90,7 +90,7 @@ function filterGenre(genre){
               <h3>${n.title}</h3>
               <p>${n.author}</p>
               <p>${n.genre} • ${n.chapters} Chapters • ${n.status}</p>
-              <a class="read" href="reader.html">Read Now</a>
+              <a class="read" href="novel.html?id=${n.id}">Read Now</a>
             </div>
           </div>
         `;
