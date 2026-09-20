@@ -6,51 +6,57 @@
 <title>FreeNovel</title>
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
 
 <header>
-  <a href="./" class="logo">📚 FreeNovel</a>
+  <a href="./index.html" class="logo">📚 FreeNovel</a>
+  <div class="menu" onclick="history.back()">☰</div>
 </header>
 
+<div style="padding:15px;background:white;">
+  <a href="./index.html" style="text-decoration:none;color:#555;">🏠 Home</a>
+  › <span id="crumb">Novel</span>
+</div>
+
 <div class="book" style="background:white;margin:15px;border-radius:18px;padding:18px;text-align:center;">
-  <img id="cover" class="cover" style="width:150px;border-radius:10px;">
+  <img id="cover" style="width:150px;border-radius:12px;">
   <h2 id="title"></h2>
   <p id="author"></p>
   <p id="genre"></p>
-  <div id="chapterList" style="margin-top:20px;"></div>
 
-  const list=document.getElementById("chapterList");
-list.innerHTML="";
-
-const max=Math.min(n.chapters,20);
-
-for(let i=1;i<=max;i++){
-  list.innerHTML+=`
-    <a href="reader.html?id=${n.id}&chapter=${i}"
-       class="read"
-       style="display:block;margin:10px 0;">
-      Chapter ${i}
-    </a>`;
-}
-
-readBtn.href="reader.html?id="+n.id+"&chapter=1";
+  <h3>Chapters</h3>
+  <div id="chapterList"></div>
 </div>
 
 <script>
-const id=new URLSearchParams(location.search).get("id");
+const id = new URLSearchParams(location.search).get("id");
 
 fetch("data/novels.json")
 .then(r=>r.json())
 .then(novels=>{
- const n=novels.find(x=>x.id===id);
- if(!n)return;
+  const n = novels.find(x=>x.id===id);
+  if(!n) return;
 
- document.title=n.title+" - FreeNovel";
- cover.src=n.cover;
- title.innerText=n.title;
- author.innerText="By "+n.author;
- genre.innerText=n.genre+" • "+n.chapters+" Chapters • "+n.status;
- readBtn.href="reader.html?id="+n.id;
+  document.title = n.title + " - FreeNovel";
+  document.getElementById("crumb").innerText = n.title;
+  document.getElementById("cover").src = n.cover;
+  document.getElementById("title").innerText = n.title;
+  document.getElementById("author").innerText = "By " + n.author;
+  document.getElementById("genre").innerText =
+    n.genre + " • " + n.chapters + " Chapters • " + n.status;
+
+  const list = document.getElementById("chapterList");
+  const max = Math.min(n.chapters,20);
+
+  for(let i=1;i<=max;i++){
+    list.innerHTML += `
+      <a class="read"
+         href="reader.html?id=${n.id}&chapter=${i}"
+         style="display:block;margin:10px 0;">
+         Chapter ${i}
+      </a>`;
+  }
 });
 </script>
 
