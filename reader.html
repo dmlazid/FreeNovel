@@ -174,9 +174,16 @@ fetch(`data/${id}.json`)
   document.querySelector(".breadcrumb #crumb").innerText = data.title;
 
   fetch(data.chapters[chapter - 1].file)
-  .then(r => r.text())
+  .then(r => {
+    if (!r.ok) throw new Error("Chapter not found");
+    return r.text();
+  })
   .then(text => {
     document.getElementById("content").innerText = text;
+  })
+  .catch(() => {
+    document.getElementById("content").innerText =
+      "Chapter file not found.";
   });
   const list = document.getElementById("chapterList");
   list.innerHTML = "";
