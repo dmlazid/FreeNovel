@@ -96,30 +96,57 @@ color:#666;
 <button>Sci-Fi</button>
 </div>
 
+
 <div class="section">
-<h2>Latest Updates</h2>
 
-<div class="card">
-<img src="https://picsum.photos/400/220?random=1">
-<div class="info">
-<h3>Demo Survival Novel</h3>
-<p>Begin your adventure with a small shelter and survive.</p>
-<a class="read" href="reader.html">Read</a>
-</div>
-</div>
+<h2>🔥 Latest Updates</h2>
 
-<div class="card">
-<img src="https://picsum.photos/400/220?random=2">
-<div class="info">
-<h3>Mystery Detective</h3>
-<p>Solve impossible crimes one chapter at a time.</p>
-<a class="read" href="#">Coming Soon</a>
-</div>
-</div>
+<div id="latest"></div>
+
+<h2 style="margin-top:30px">⭐ Popular Novels</h2>
+
+<div id="popular"></div>
+
+<h2 style="margin-top:30px">✅ Completed</h2>
+
+<div id="completed"></div>
 
 </div>
 
 <footer>© 2026 FreeNovel</footer>
 
-</body>
-</html>
+<script>
+fetch("data/novels.json")
+.then(r=>r.json())
+.then(showNovels);
+
+function showNovels(novels){
+
+const latest=document.getElementById("latest");
+const popular=document.getElementById("popular");
+const completed=document.getElementById("completed");
+
+novels.forEach(n=>{
+
+const card=`
+<div class="card">
+<img src="${n.cover}">
+<div class="info">
+<h3>${n.title}</h3>
+<p>${n.author}</p>
+<p>${n.genre} • ${n.chapters} Chapters • ${n.status}</p>
+<a class="read" href="reader.html">Read Now</a>
+</div>
+</div>
+`;
+
+latest.innerHTML+=card;
+popular.innerHTML+=card;
+
+if(n.status==="Completed"){
+completed.innerHTML+=card;
+}
+
+});
+}
+</script>
