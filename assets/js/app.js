@@ -46,17 +46,16 @@ function showNovels(novels) {
   novels.forEach(n => {
 
     const card = `
-      <div class="card">
-        <img src="${n.cover}">
-        <div class="info">
-          <h3>${n.title}</h3>
-          <p>${n.author}</p>
-          <p>${n.genre} • ${n.chapters} Chapters • ${n.status}</p>
-          <a class="read" href="reader.html">Read Now</a>
-        </div>
-      </div>
-    `;
-
+  <div class="card">
+    <img src="${n.cover}" alt="${n.title}">
+    <div class="info">
+      <h3>${n.title}</h3>
+      <p>${n.author}</p>
+      <p>${n.genre} • ${n.chapters} Chapters • ${n.status}</p>
+      <a class="read" href="novel.html?id=${n.id}">Read Now</a>
+    </div>
+  </div>
+`;
     latest.innerHTML += card;
     popular.innerHTML += card;
 
