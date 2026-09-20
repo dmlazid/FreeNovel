@@ -163,24 +163,28 @@ const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 const chapter = Number(params.get("chapter") || 1);
 
-fetch("data/novels.json")
+fetch(`data/${id}.json`)
 .then(r => r.json())
-.then(novels => {
-  const n = novels.find(book => book.id === id);
-  if (!n) return;
+.then(data => {
+  novel = data;
 
-  document.getElementById("title").innerText = n.title;
-  document.getElementById("chapterName").innerText = "Chapter " + chapter;
-  document.querySelector(".cover").src = n.cover;
-  document.querySelector(".breadcrumb").innerHTML =
-    `<button class="home-btn" onclick="window.location.href='./index.html'">🏠 Home</button> › ${n.title}`;
+  document.getElementById("title").innerText = data.title;
+  document.getElementById("chapterName").innerText = data.chapters[chapter - 1].title;
+  document.querySelector(".cover").src = data.cover;
+  document.querySelector(".breadcrumb #crumb").innerText = data.title;
 
-  document.getElementById("content").innerHTML = `
-    <p><b>${n.title} - Chapter ${chapter}</b></p>
-    <p>This is Chapter ${chapter} of ${n.title}.</p>
-    <p>Author: ${n.author}</p>
-    <p>Genre: ${n.genre}</p>
-    <p>Story continues here...</p>`;
+  document.getElementById("content").innerText = data.chapters[chapter - 1].content;
+
+  const list = document.getElementById("chapterList");
+  list.innerHTML = "";
+
+  data.chapters.forEach((c, i) => {
+    list.innerHTML += `
+      <button onclick="window.location.href='reader.html?id=${id}&chapter=${i+1}'">
+        ${i+1}
+      </button>`;
+  });
+});
 
   const list = document.getElementById("chapterList");
   list.innerHTML = "";
