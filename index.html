@@ -55,59 +55,8 @@
 </div>
 
 <footer>© 2026 FreeNovel</footer>
-<script>
-// Side menu
-function openMenu(){
-  document.getElementById("sideMenu").style.width="260px";
-}
+  
+<script src="assets/js/app.js"></script>
 
-function closeMenu(){
-  document.getElementById("sideMenu").style.width="0";
-}
-
-// Search
-function searchNovel(){
-  const text=document.getElementById("searchInput").value.toLowerCase();
-
-  document.querySelectorAll(".card").forEach(card=>{
-    card.style.display=card.innerText.toLowerCase().includes(text)
-      ? "block"
-      : "none";
-  });
-}
-
-// Load novels
-fetch("data/novels.json")
-.then(r=>r.json())
-.then(showNovels);
-
-function showNovels(novels){
-
-  const latest=document.getElementById("latest");
-  const popular=document.getElementById("popular");
-  const completed=document.getElementById("completed");
-
-  novels.forEach(n=>{
-
-    const card=`
-      <div class="card">
-        <img src="${n.cover}">
-        <div class="info">
-          <h3>${n.title}</h3>
-          <p>${n.author}</p>
-          <p>${n.genre} • ${n.chapters} Chapters • ${n.status}</p>
-          <a class="read" href="reader.html">Read Now</a>
-        </div>
-      </div>
-    `;
-
-    latest.innerHTML += card;
-
-if (n.status === "Completed") {
-  completed.innerHTML += card;
-} else {
-  popular.innerHTML += card;
-}
-  });
-}
-</script>
+</body>
+</html>
