@@ -27,8 +27,12 @@ font-size:28px;
 font-weight:bold;
 color:white;
 text-decoration:none;
+display:flex;
+align-items:center;
+gap:8px;
 user-select:none;
 -webkit-user-select:none;
+-webkit-touch-callout:none;
 }
 
 .menu{
