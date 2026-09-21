@@ -2,136 +2,40 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FreeNovel Reader</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-
-body{
-  background:#dfe5e4;
-  font-family:Poppins,sans-serif;
-  color:#333;
-}
-
-header{
-  background:#00897b;
-  padding:18px;
-  position:sticky;
-  top:0;
-  z-index:99;
-}
-
-.logo{height:56px}
-
-.container{
-  max-width:760px;
-  margin:auto;
-  padding:22px 18px;
-}
-
-h1{
-  text-align:center;
-  color:#00897b;
-  font-size:34px;
-  font-weight:700;
-  margin:22px 0 6px;
-}
-
-#volumeBtn{
-  display:block;
-  text-align:center;
-  text-decoration:none;
-  color:#666;
-  font-size:28px;
-  font-weight:500;
-  margin-bottom:18px;
-}
-
-.controls{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:10px;
-  margin-bottom:20px;
-}
-
-select{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:12px;
-  background:#00897b;
-  color:white;
-  font:16px Poppins;
-}
-
-.card{
-  background:white;
-  border-radius:24px;
-  padding:24px;
-}
-
-#chapterTitle{
-  font-size:32px;
-  font-weight:700;
-  margin-bottom:18px;
-}
-
-#content{
-  max-width:560px;
-  margin:0 auto;
-  font-size:18px;
-  line-height:2;
-}
-
-#content p{
-  margin-bottom:22px;
-}
-
-.nav{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  margin-top:24px;
-}
-
-.nav button{
-  background:#00897b;
-  color:white;
-  border:none;
-  border-radius:12px;
-  padding:15px;
-  font:600 18px Poppins;
-}
-
-.nav button:disabled{
-  opacity:.45;
-}
-
-#topBtn{
-  position:fixed;
-  right:18px;
-  bottom:18px;
-  width:52px;
-  height:52px;
-  border:none;
-  border-radius:50%;
-  background:#d8b04b;
-  color:white;
-  font-size:24px;
-  display:none;
-}
+body{font-family:Poppins,sans-serif;background:#dfe5e4;color:#333}
+header{background:#00897b;padding:16px}
+.logo{height:52px}
+.container{max-width:760px;margin:auto;padding:22px 18px}
+h1{text-align:center;color:#00897b;font-size:34px;font-weight:700;margin:18px 0 8px}
+#volumeBtn{display:block;text-align:center;font-size:28px;color:#666;text-decoration:none;margin-bottom:20px}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
+select{padding:14px;border:none;border-radius:12px;background:#00897b;color:#fff;font:16px Poppins}
+.card{background:#fff;border-radius:24px;padding:24px}
+#chapterTitle{font-size:32px;font-weight:700;margin-bottom:18px}
+#content{max-width:560px;margin:auto;font-size:18px;line-height:2}
+#content p{margin-bottom:22px}
+.nav{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}
+.nav button{background:#00897b;color:#fff;border:none;border-radius:12px;padding:15px;font:600 18px Poppins}
+.nav button:disabled{opacity:.45}
+#topBtn{position:fixed;right:18px;bottom:18px;width:52px;height:52px;border:none;border-radius:50%;background:#d8b04b;color:#fff;font-size:24px;display:none}
 </style>
 </head>
 
 <body>
 
 <header>
-<a href="index.html">
-<img class="logo" src="assets/logo.png" onerror="this.src='assets/logo.svg'">
-</a>
+  <a href="index.html">
+    <img class="logo"
+         src="assets/logo.png"
+         onerror="this.src='logo.png';this.onerror=function(){this.src='assets/logo.svg';this.onerror=function(){this.src='logo.svg';}}">
+  </a>
 </header>
 
 <div class="container">
@@ -141,7 +45,6 @@ select{
 <a href="#" id="volumeBtn">Volume 1 ▼</a>
 
 <div class="controls">
-
 <select id="chapterSelect"></select>
 
 <select id="fontSelect">
@@ -158,20 +61,16 @@ select{
 <option>24</option>
 <option>26</option>
 </select>
-
 </div>
 
 <div class="card">
-
 <div id="chapterTitle">Loading...</div>
-
 <div id="content">Loading...</div>
 
 <div class="nav">
 <button id="prev">◀ Previous</button>
 <button id="next">Next ▶</button>
 </div>
-
 </div>
 
 </div>
@@ -179,18 +78,15 @@ select{
 <button id="topBtn">↑</button>
 
 <script>
+
 const files=[
- "texts/new-life-young-again-v1.txt",
- "texts/new-life-young-again-v2.txt",
- "texts/new-life-young-again-v3.txt"
+"texts/new-life-young-again-v1.txt",
+"texts/new-life-young-again-v2.txt",
+"texts/new-life-young-again-v3.txt"
 ];
 
-const params=new URLSearchParams(location.search);
-
-const id=params.get("id")||"new-life-young-again";
-
-let volume=Number(params.get("ch")||0);
-
+const id="new-life-young-again";
+let volume=0;
 let chapters=[];
 let current=0;
 
@@ -203,146 +99,109 @@ const sizeSelect=document.getElementById("sizeSelect");
 const prev=document.getElementById("prev");
 const next=document.getElementById("next");
 
-function updateVolumeButton(){
- volumeBtn.textContent=`Volume ${volume+1} ▼`;
-}
-
-updateVolumeButton();
-
 volumeBtn.onclick=e=>{
- e.preventDefault();
- volume=(volume+1)%3;
- history.replaceState({},'',`read.html?id=${id}&ch=${volume}`);
- updateVolumeButton();
- loadVolume();
+e.preventDefault();
+volume=(volume+1)%3;
+volumeBtn.textContent=`Volume ${volume+1} ▼`;
+loadVolume();
 };
 
 async function loadVolume(){
 
- let text=await fetch(files[volume]).then(r=>r.text());
+let text=await fetch(files[volume]).then(r=>r.text());
+text=text.replace(/\r/g,'');
 
- text=text.replace(/\r/g,'');
+// -------- FIX TOC PER VOLUME --------
 
- /* ---------- REMOVE TOC ---------- */
+if(volume===0){
 
-if (volume === 0) {
-  // V1: use second Prologue
-  const p = [...text.matchAll(/^Prologue:/gm)];
-  if (p.length >= 2) text = text.slice(p[1].index);
+const p=[...text.matchAll(/^Prologue:/gm)];
+if(p.length>=2) text=text.slice(p[1].index);
 
-} else if (volume === 1) {
-  // V2: jump to first chapter that has body text
-  const m = text.match(/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*)\n{2,}/m);
-  if (m) text = text.slice(m.index);
+}else if(volume===1){
 
-} else {
-  // V3: first real heading
-  const start = text.search(/^(Prologue:|Chapter\s+\d+:|Interlude:)/m);
-  if (start !== -1) text = text.slice(start);
+const c=[...text.matchAll(/^Chapter\s+1:/gm)];
+if(c.length>=2) text=text.slice(c[1].index);
+else if(c.length) text=text.slice(c[0].index);
+
+}else{
+
+const p=text.search(/^(Prologue:|Chapter\s+1:)/m);
+if(p!==-1) text=text.slice(p);
+
 }
- const after=text.search(/^Afterword/m);
 
- if(after!==-1)
-   text=text.slice(0,after);
+const after=text.search(/^Afterword/m);
+if(after!==-1) text=text.slice(0,after);
 
- /* ---------- SPLIT CHAPTERS ---------- */
+// -------- SPLIT CHAPTERS --------
 
- chapters=[];
+chapters=[];
 
- const rx=/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*)$/gm;
+const rx=/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*)$/gm;
+const heads=[...text.matchAll(rx)];
 
- const heads=[...text.matchAll(rx)];
+for(let i=0;i<heads.length;i++){
 
- for(let i=0;i<heads.length;i++){
+const start=heads[i].index;
+const end=i+1<heads.length?heads[i+1].index:text.length;
 
-   const start=heads[i].index;
-   const end=i+1<heads.length?heads[i+1].index:text.length;
+let title=heads[i][0];
 
-   let name=heads[i][0];
+if(title.startsWith("Prologue"))
+title="Chapter 1";
 
-   if(name.startsWith("Prologue"))
-      name="Chapter 1";
+chapters.push({
+title,
+body:text.slice(start+heads[i][0].length,end).trim()
+});
 
-   chapters.push({
-      title:name,
-      body:text.slice(start+heads[i][0].length,end).trim()
-   });
+}
 
- }
+chapterSelect.innerHTML='';
 
- if(!chapters.length){
+chapters.forEach((c,i)=>{
+chapterSelect.innerHTML+=`<option value="${i}">${c.title}</option>`;
+});
 
-   chapters=[{
-      title:"Chapter 1",
-      body:text
-   }];
-
- }
-
- chapterSelect.innerHTML='';
-
- chapters.forEach((c,i)=>{
-
-   chapterSelect.innerHTML+=`<option value="${i}">${c.title}</option>`;
-
- });
-
- current=0;
-
- show();
+current=0;
+show();
 
 }
 
 function show(){
 
- chapterTitle.textContent=chapters[current].title;
+const ch=chapters[current];
 
- content.innerHTML=chapters[current].body
-   .split(/\n\s*\n/)
-   .map(p=>`<p>${p}</p>`)
-   .join('');
+chapterTitle.textContent=ch.title;
 
- chapterSelect.value=current;
+content.innerHTML=ch.body
+.split(/\n\s*\n/)
+.map(p=>`<p>${p}</p>`)
+.join('');
 
- content.style.fontFamily=fontSelect.value;
- content.style.fontSize=sizeSelect.value+'px';
+chapterSelect.value=current;
 
- prev.disabled=current===0;
- next.disabled=current===chapters.length-1;
+content.style.fontFamily=fontSelect.value;
+content.style.fontSize=sizeSelect.value+"px";
 
- window.scrollTo({top:0,behavior:'smooth'});
+prev.disabled=current===0;
+next.disabled=current===chapters.length-1;
 
+window.scrollTo({top:0,behavior:"smooth"});
 }
 
-chapterSelect.onchange=()=>{
- current=+chapterSelect.value;
- show();
-};
-
+chapterSelect.onchange=()=>{current=+chapterSelect.value;show();};
 fontSelect.onchange=show;
 sizeSelect.onchange=show;
+prev.onclick=()=>{if(current>0){current--;show();}};
+next.onclick=()=>{if(current<chapters.length-1){current++;show();}};
 
-prev.onclick=()=>{
- if(current>0){
-   current--;
-   show();
- }
-};
-
-next.onclick=()=>{
- if(current<chapters.length-1){
-   current++;
-   show();
- }
-};
-
-const topBtn=document.getElementById('topBtn');
-
-window.addEventListener('scroll',()=>{
- topBtn.style.display=window.scrollY>500?'block':'none';
+window.addEventListener("scroll",()=>{
+document.getElementById("topBtn").style.display=window.scrollY>500?"block":"none";
 });
 
-topBtn.onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+document.getElementById("topBtn").onclick=()=>window.scrollTo({top:0,behavior:"smooth"});
 
 loadVolume();
 
