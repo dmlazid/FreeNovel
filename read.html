@@ -9,34 +9,37 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#e6eceb;font-family:Poppins,sans-serif;color:#222}
+body{background:#e7eceb;font-family:Poppins,sans-serif;color:#222}
 header{background:#00897b;padding:18px;position:sticky;top:0;z-index:100}
 .logo{height:52px}
 .container{max-width:760px;margin:auto;padding:18px}
-h1{text-align:center;color:#00897b;font-size:28px;font-weight:700;margin:16px 0 6px}
-.subtitle{text-align:center;color:#666;font-size:20px;margin-bottom:22px}
+h1{text-align:center;color:#00897b;font-size:30px;font-weight:700;margin:18px 0 8px}
+.subtitle{text-align:center;color:#666;font-size:20px;margin-bottom:20px}
 .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
-select{padding:13px;border:none;border-radius:12px;background:#00897b;color:#fff;font:16px Poppins}
-.reader{background:#fff;border-radius:22px;padding:26px;box-shadow:0 6px 16px rgba(0,0,0,.08)}
+select{width:100%;padding:13px;border:none;border-radius:12px;background:#00897b;color:white;font:16px Poppins}
+.reader{background:white;border-radius:22px;padding:26px;box-shadow:0 6px 16px rgba(0,0,0,.08)}
 #chapterTitle{font-size:28px;font-weight:700;line-height:1.35;margin-bottom:18px}
 #content{font-size:18px;line-height:2;white-space:pre-wrap}
-.nav{display:flex;gap:12px;margin-top:26px}
-button{flex:1;padding:15px;border:none;border-radius:12px;background:#00897b;color:#fff;font:600 17px Poppins}
-button:disabled{opacity:.45}
+.nav{display:flex;gap:12px;margin-top:28px}
+button{flex:1;padding:15px;border:none;border-radius:12px;background:#00897b;color:white;font:600 17px Poppins}
+button:disabled{opacity:.4}
 </style>
 </head>
 <body>
 
 <header>
-<a href="index.html"><img src="assets/logo.png" class="logo"></a>
+<a href="index.html">
+<img src="assets/logo.png" class="logo">
+</a>
 </header>
 
 <div class="container">
 
 <h1>[New Life+] Young Again in Another World</h1>
-<div class="subtitle" id="volumeTitle"></div>
+<div class="subtitle" id="volumeTitle">Volume 1</div>
 
 <div class="controls">
+
 <select id="chapterSelect"></select>
 
 <select id="fontSelect">
@@ -54,11 +57,13 @@ button:disabled{opacity:.45}
 <option>26</option>
 <option>28</option>
 </select>
+
 </div>
 
 <div class="reader">
 
 <div id="chapterTitle">Loading...</div>
+
 <div id="content">Loading...</div>
 
 <div class="nav">
@@ -67,6 +72,7 @@ button:disabled{opacity:.45}
 </div>
 
 </div>
+
 </div>
 
 <script>
@@ -99,7 +105,6 @@ content.style.fontSize=sizeSelect.value+"px";
 localStorage.font=fontSelect.value;
 localStorage.size=sizeSelect.value;
 }
-
 fontSelect.onchange=applyStyle;
 sizeSelect.onchange=applyStyle;
 
@@ -112,43 +117,47 @@ let text=await fetch(files[volume]).then(r=>r.text());
 
 text=text.replace(/\r/g,"");
 
-/* REMOVE EVERYTHING BEFORE REAL PROLOGUE */
-const start=text.search(/Prologue:/i);
-if(start>0) text=text.slice(start);
+/* remove everything before the REAL prologue */
+const matches=[...text.matchAll(/^Prologue:/gm)];
+if(matches.length>1){
+text=text.slice(matches[1].index);
+}else if(matches.length===1){
+text=text.slice(matches[0].index);
+}
 
-/* REMOVE AFTERWORD + COPYRIGHT */
-text=text.replace(/Afterword[\s\S]*/i,"");
+/* remove Afterword */
+text=text.replace(/^Afterword[\s\S]*/m,"");
 
-/* SPLIT INTO REAL CHAPTERS ONLY */
 const rx=/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*)$/gm;
 
-const m=[...text.matchAll(rx)];
+const heads=[...text.matchAll(rx)];
 
 chapters=[];
 
-let num=1;
+for(let i=0;i<heads.length;i++){
 
-for(let i=0;i<m.length;i++){
+const start=heads[i].index;
+const end=i+1<heads.length?heads[i+1].index:text.length;
 
-const s=m[i].index;
-const e=i+1<m.length?m[i+1].index:text.length;
-
-let heading=m[i][0];
+let heading=heads[i][0];
 
 if(/^Prologue:/i.test(heading))
 heading="Chapter 1";
 
-else if(/^Chapter/i.test(heading)){
-heading=heading.replace(/^Chapter\s+\d+/i,"Chapter "+(++num));
-}
-
-else if(/^Interlude/i.test(heading))
-heading="Interlude";
-
 chapters.push({
 title:heading,
-body:text.slice(s+m[i][0].length,e).trim()
+body:text.slice(start+heads[i][0].length,end).trim()
 });
+
+}
+
+/* if parser fails, show full text */
+if(chapters.length===0){
+
+chapters=[{
+title:"Chapter 1",
+body:text
+}];
 
 }
 
@@ -174,29 +183,35 @@ chapterSelect.value=current;
 prev.disabled=current===0;
 next.disabled=current===chapters.length-1;
 
-scrollTo(0,0);
+scrollTo({top:0,behavior:"smooth"});
 
 applyStyle();
 
 }
 
 chapterSelect.onchange=()=>{
+
 current=+chapterSelect.value;
 show();
+
 };
 
 prev.onclick=()=>{
-if(current){
+
+if(current>0){
 current--;
 show();
 }
+
 };
 
 next.onclick=()=>{
+
 if(current<chapters.length-1){
 current++;
 show();
 }
+
 };
 
 load();
