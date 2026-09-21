@@ -2,147 +2,93 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FreeNovel</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 
 body{
-background:#e6eceb;
-font-family:Poppins,sans-serif;
+  font-family:Poppins,sans-serif;
+  background:#d9dddd;
+  color:#222;
 }
 
 header{
-background:#00897b;
-padding:18px;
+  background:#00897B;
+  padding:16px 20px;
 }
 
 .logo{
-height:52px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:#fff;
+  text-decoration:none;
+  font-size:30px;
+  font-weight:700;
+}
+
+.logo img{
+  width:46px;
+  height:46px;
+  object-fit:contain;
 }
 
 .container{
-max-width:760px;
-margin:auto;
-padding:18px;
+  max-width:760px;
+  margin:auto;
+  padding:40px 20px;
 }
 
 .card{
-background:#fff;
-border-radius:22px;
-padding:24px;
-box-shadow:0 6px 16px rgba(0,0,0,.08);
+  background:#fff;
+  border-radius:24px;
+  padding:40px 24px;
+  text-align:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.08);
 }
 
-.cover{
-width:180px;
-display:block;
-margin:auto;
-border-radius:14px;
+.card h1{
+  color:#00897B;
+  font-size:34px;
+  margin-bottom:12px;
 }
 
-h1{
-text-align:center;
-color:#00897b;
-font-size:30px;
-font-weight:700;
-margin:18px 0 10px;
+.card p{
+  color:#666;
+  font-size:18px;
+  margin-bottom:28px;
 }
 
-.author,
-.genre{
-text-align:center;
-color:#666;
-font-size:16px;
-margin-bottom:6px;
-}
-
-.desc{
-margin:18px 0;
-line-height:1.8;
-font-size:15px;
-color:#444;
-}
-
-h2{
-margin:24px 0 14px;
-color:#00897b;
-font-size:24px;
-}
-
-.volumes{
-display:flex;
-flex-direction:column;
-gap:14px;
-}
-
-.btn{
-display:block;
-text-align:center;
-padding:18px;
-background:#00897b;
-color:#fff;
-text-decoration:none;
-border-radius:14px;
-font-size:20px;
-font-weight:600;
-transition:.2s;
-}
-
-.btn:active{
-transform:scale(.98);
+button{
+  background:#00897B;
+  color:#fff;
+  border:none;
+  border-radius:14px;
+  padding:16px 28px;
+  font:600 18px Poppins;
+  cursor:pointer;
 }
 </style>
 </head>
 <body>
 
 <header>
-<a href="index.html">
-<img src="assets/logo.png" class="logo">
-</a>
+  <a href="index.html" class="logo">
+    <img src="logo.png" onerror="this.style.display='none'">
+    <span>FreeNovel</span>
+  </a>
 </header>
 
 <div class="container">
-
-<div class="card">
-
-<img src="covers/new-life-young-again.png" class="cover">
-
-<h1>[New Life+] Young Again in Another World</h1>
-
-<p class="author">Mine • Illustrator: Kaboccha</p>
-
-<p class="genre">
-Action • Adventure • Comedy • Fantasy • Romance
-</p>
-
-<p class="desc">
-After dying unexpectedly, Renya is reincarnated into another world by an overly cheerful goddess. Instead of the peaceful life he expected, he becomes entangled in dangerous adventures, powerful enemies, and unexpected companions.
-</p>
-
-<h2>Volumes</h2>
-
-<div class="volumes">
-
-<a class="btn" href="read.html?ch=0">
-📖 Volume 1
-</a>
-
-<a class="btn" href="read.html?ch=1">
-📖 Volume 2
-</a>
-
-<a class="btn" href="read.html?ch=2">
-📖 Volume 3
-</a>
-
-</div>
-
-</div>
-
+  <div class="card">
+    <h1>New Novel</h1>
+    <p>This page is empty and ready for your next novel.</p>
+    <button onclick="history.back()">Go Back</button>
+  </div>
 </div>
 
 </body>
