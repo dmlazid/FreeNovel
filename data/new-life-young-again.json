@@ -1,21 +1,12 @@
 {
-  "id": "new-life-young-again",
-  "title": "[New Life+] Young Again in Another World",
-  "author": "Mine Illustrator Kabocha",
-  "genre": "Action, Adventure, Comedy, Fantasy, Harem, Romance, Seinen",
-  "cover": "covers/new-life-young-again.png",
-  "chapters": [
-    {
-      "title": "Volume 1",
-      "pdf": "pdfs/new-life-young-again-v1.pdf"
-    },
-    {
-      "title": "Volume 2",
-      "pdf": "pdfs/new-life-young-again-v2.pdf"
-    },
-    {
-      "title": "Volume 3",
-      "pdf": "pdfs/new-life-young-again-v3.pdf"
-    }
+  "id":"new-life-young-again",
+  "title":"[New Life+] Young Again in Another World",
+  "author":"Mine Illustrator Kabocha",
+  "genre":"Action, Adventure, Comedy, Fantasy, Harem, Romance, Seinen",
+  "cover":"covers/new-life-young-again.png",
+  "chapters":[
+    {"title":"Volume 1"},
+    {"title":"Volume 2"},
+    {"title":"Volume 3"}
   ]
 }
