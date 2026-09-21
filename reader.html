@@ -3,55 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reader</title>
+<title>FreeNovel Reader</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#eceff1}
-header{background:#00897b;color:#fff;padding:16px;font-size:28px;font-weight:bold}
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f3}
+header{background:#00897b;color:#fff;padding:16px;font-size:24px;font-weight:bold}
+header a{color:#fff;text-decoration:none}
 .container{padding:20px}
-.card{background:#fff;border-radius:20px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
-iframe{width:100%;height:80vh;border:none;border-radius:12px}
-.nav{display:flex;justify-content:space-between;margin-top:20px}
-button{background:#00897b;color:#fff;border:none;padding:14px 22px;border-radius:30px;font-size:18px}
-button:disabled{opacity:.4}
+.card{background:#fff;border-radius:20px;padding:20px}
+h1{margin-top:0}
+#pdf{width:100%;height:75vh;border:none;border-radius:12px;background:#eee}
+.nav{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}
+.nav button{width:46px;height:46px;border:none;border-radius:50%;background:#00897b;color:#fff;font-size:18px}
 </style>
 </head>
 <body>
 
-<header>📚 FreeNovel</header>
+<header><a href="index.html">📚 FreeNovel</a></header>
 
 <div class="container">
-  <div class="card">
-    <h1 id="title"></h1>
-    <h2 id="volume"></h2>
+<div class="card">
+<h1 id="title">Loading...</h1>
+<h2 id="volume"></h2>
 
-    <iframe id="viewer"></iframe>
+<div class="nav" id="buttons"></div>
 
-    <div class="nav">
-      <button id="prev">◀ Prev</button>
-      <button id="next">Next ▶</button>
-    </div>
-  </div>
+<iframe id="pdf"></iframe>
+</div>
 </div>
 
 <script>
 const params=new URLSearchParams(location.search);
 const id=params.get("id");
-let ch=parseInt(params.get("ch")||0);
+let vol=parseInt(params.get("ch"))||0;
 
-async function load(){
- const data=await fetch("data/"+id+".json").then(r=>r.json());
+fetch(`data/${id}.json`)
+.then(r=>r.json())
+.then(data=>{
+document.getElementById("title").textContent=data.title;
 
- document.getElementById("title").textContent=data.title;
- document.getElementById("volume").textContent=data.chapters[ch].title;
- document.getElementById("viewer").src=data.chapters[ch].pdf;
+const list=data.chapters||[];
 
- document.getElementById("prev").disabled=(ch===0);
- document.getElementById("next").disabled=(ch===data.chapters.length-1);
-
- document.getElementById("prev").onclick=()=>location=`reader.html?id=${id}&ch=${ch-1}`;
- document.getElementById("next").onclick=()=>location=`reader.html?id=${id}&ch=${ch+1}`;
+function loadVolume(i){
+vol=i;
+document.getElementById("volume").textContent=list[i].title;
+document.getElementById("pdf").src=list[i].pdf;
+history.replaceState({}, "", `reader.html?id=${id}&ch=${i}`);
 }
-load();
+
+const buttons=document.getElementById("buttons");
+buttons.innerHTML="";
+list.forEach((v,i)=>{
+const b=document.createElement("button");
+b.textContent=i+1;
+b.onclick=()=>loadVolume(i);
+buttons.appendChild(b);
+});
+
+loadVolume(Math.min(vol,list.length-1));
+});
 </script>
 
 </body>
