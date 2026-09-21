@@ -225,22 +225,21 @@ async function loadVolume(){
 
  /* ---------- REMOVE TOC ---------- */
 
- if(volume===0){
+if (volume === 0) {
+  // V1: use second Prologue
+  const p = [...text.matchAll(/^Prologue:/gm)];
+  if (p.length >= 2) text = text.slice(p[1].index);
 
-   const p=[...text.matchAll(/^Prologue:/gm)];
+} else if (volume === 1) {
+  // V2: jump to first chapter that has body text
+  const m = text.match(/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*)\n{2,}/m);
+  if (m) text = text.slice(m.index);
 
-   if(p.length>=2)
-     text=text.slice(p[1].index);
-
- }else{
-
-   const start=text.search(/^(Prologue:|Chapter\s+\d+:|Interlude:)/m);
-
-   if(start!==-1)
-     text=text.slice(start);
-
- }
-
+} else {
+  // V3: first real heading
+  const start = text.search(/^(Prologue:|Chapter\s+\d+:|Interlude:)/m);
+  if (start !== -1) text = text.slice(start);
+}
  const after=text.search(/^Afterword/m);
 
  if(after!==-1)
