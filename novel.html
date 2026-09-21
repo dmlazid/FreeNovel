@@ -3,77 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FreeNovel Reader</title>
+<title>FreeNovel</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{
+  background:#dfe5e5;
   font-family:Arial,sans-serif;
-  background:#dfe4e4;
 }
 header{
   background:#00897b;
-  padding:18px;
+  padding:20px;
 }
 header a{
   color:#fff;
   text-decoration:none;
   font-size:42px;
 }
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:15px;
-}
+.container{padding:20px;}
 .card{
   background:#fff;
-  border-radius:28px;
+  border-radius:30px;
   padding:25px;
-  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  text-align:center;
+}
+.cover{
+  width:220px;
+  border-radius:20px;
+  display:block;
+  margin:0 auto 20px;
 }
 h1{
-  text-align:center;
-  margin-bottom:20px;
+  font-size:30px;
+  margin-bottom:12px;
 }
-.viewer{
-  width:100%;
-  height:78vh;
-  border:none;
-  border-radius:15px;
-  background:#eee;
+.info{
+  color:#444;
+  margin:8px 0;
 }
-.controls{
+.volumes{
   display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:18px;
+  flex-direction:column;
+  gap:15px;
+  margin-top:25px;
 }
 .btn{
-  background:#00897b;
-  color:#fff;
-  border:none;
-  border-radius:30px;
-  padding:14px 28px;
-  font-size:18px;
-  cursor:pointer;
-}
-.page{
-  font-size:20px;
-  font-weight:bold;
-}
-.back{
   display:block;
-  margin-top:20px;
-  text-align:center;
   background:#00897b;
   color:#fff;
   text-decoration:none;
-  padding:16px;
-  border-radius:30px;
+  padding:18px;
+  border-radius:35px;
+  font-size:22px;
+  font-weight:bold;
 }
 </style>
 </head>
-
 <body>
 
 <header>
@@ -81,75 +66,47 @@ h1{
 </header>
 
 <div class="container">
-<div class="card">
-
-<h1 id="title">Loading...</h1>
-
-<iframe id="viewer" class="viewer"></iframe>
-
-<div class="controls">
-<button class="btn" onclick="prevPage()">◀ Prev</button>
-<div class="page" id="pageNum">Page 1</div>
-<button class="btn" onclick="nextPage()">Next ▶</button>
-</div>
-
-<a id="backNovel" class="back">← Back to Novel</a>
-
-</div>
+  <div class="card" id="novel">
+    Loading...
+  </div>
 </div>
 
 <script>
-const params = new URLSearchParams(location.search);
-const id = params.get("id");
-const ch = parseInt(params.get("ch") || "1");
+const params=new URLSearchParams(location.search);
+const id=params.get("id")||"new-life-young-again";
 
-let page = 1;
-let pdf = "";
+async function loadNovel(){
 
-async function loadReader(){
+  const data=await fetch(`data/${id}.json`).then(r=>r.json());
 
-  const novel = await fetch(`data/${id}.json`).then(r=>r.json());
+  let buttons="";
 
-  const chapter = novel.chapters[ch-1];
+  data.chapters.forEach((chapter,index)=>{
+    buttons+=`
+      <a class="btn"
+      href="read.html?id=${id}&ch=${index+1}">
+      ${chapter.title}
+      </a>`;
+  });
 
-  if(!chapter) throw "Chapter not found";
+  document.getElementById("novel").innerHTML=`
+    <img class="cover" src="${data.cover}" alt="${data.title}">
+    <h1>${data.title}</h1>
 
-  document.getElementById("title").innerText =
-    novel.title + " — " + chapter.title;
+    <p class="info">${data.author}</p>
+    <p class="info">${data.genre}</p>
+    <p class="info">${data.chapters.length} Volumes • Ongoing</p>
 
-  document.getElementById("backNovel").href =
-    "novel.html?id=" + id;
-
-  pdf = chapter.pdf;
-
-  loadPage();
+    <div class="volumes">
+      ${buttons}
+    </div>
+  `;
 }
 
-function loadPage(){
-  document.getElementById("viewer").src =
-    pdf + "#page=" + page + "&zoom=page-width";
-
-  document.getElementById("pageNum").innerText =
-    "Page " + page;
-}
-
-function nextPage(){
-  page++;
-  loadPage();
-}
-
-function prevPage(){
-  if(page>1){
-    page--;
-    loadPage();
-  }
-}
-
-loadReader().catch(err=>{
-  document.querySelector(".card").innerHTML=`
-    <h1>Reader Error</h1>
-    <p style="text-align:center;margin:20px 0;">${err}</p>
-    <a class="back" href="index.html">← Back Home</a>
+loadNovel().catch(()=>{
+  document.getElementById("novel").innerHTML=`
+    <h2>Novel not found</h2>
+    <a class="btn" href="index.html">← Back Home</a>
   `;
 });
 </script>
