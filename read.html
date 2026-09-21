@@ -3,12 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FreeNovel Reader</title>
+
+<title>FreeNovel</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+
 body{
 font-family:Poppins,sans-serif;
 background:#d9dddd;
@@ -16,11 +18,11 @@ color:#222;
 }
 
 header{
-background:#00897B;
-padding:18px;
 position:sticky;
 top:0;
-z-index:50;
+z-index:100;
+background:#00897B;
+padding:16px 20px;
 }
 
 .brand{
@@ -28,14 +30,14 @@ display:flex;
 align-items:center;
 gap:12px;
 text-decoration:none;
-color:#fff;
-font-size:26px;
+color:white;
+font-size:30px;
 font-weight:700;
 }
 
 .brand img{
-width:46px;
-height:46px;
+width:48px;
+height:48px;
 object-fit:contain;
 }
 
@@ -46,29 +48,30 @@ padding:28px 18px;
 }
 
 h1{
-font-size:34px;
-font-weight:800;
 text-align:center;
+font-size:32px;
+font-weight:800;
 color:#00897B;
-margin-top:10px;
+margin-bottom:12px;
 }
 
-.volumeBtn{
+#volumeBtn{
 display:block;
-margin:18px auto 26px;
+margin:auto;
 background:none;
 border:none;
 font-size:34px;
 font-family:Poppins,sans-serif;
 color:#666;
 cursor:pointer;
+margin-bottom:22px;
 }
 
 .controls{
 display:grid;
 grid-template-columns:2fr 1fr 90px;
 gap:10px;
-margin-bottom:18px;
+margin-bottom:20px;
 }
 
 select{
@@ -77,23 +80,23 @@ padding:15px;
 border:none;
 border-radius:14px;
 background:#00897B;
-color:#fff;
+color:white;
 font-family:Poppins,sans-serif;
 font-size:18px;
 outline:none;
 }
 
 .reader{
-background:#fff;
+background:white;
 border-radius:28px;
 padding:28px;
 box-shadow:0 8px 30px rgba(0,0,0,.08);
 }
 
 #chapterTitle{
-font-size:30px;
+font-size:28px;
 font-weight:800;
-margin-bottom:22px;
+margin-bottom:24px;
 }
 
 #content{
@@ -103,14 +106,13 @@ font-size:18px;
 line-height:2;
 white-space:pre-wrap;
 word-break:break-word;
-text-align:left;
 }
 
 .nav{
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:12px;
-margin-top:28px;
+margin-top:26px;
 }
 
 .nav button{
@@ -118,7 +120,7 @@ padding:18px;
 border:none;
 border-radius:16px;
 background:#00897B;
-color:#fff;
+color:white;
 font-family:Poppins,sans-serif;
 font-size:20px;
 font-weight:700;
@@ -131,6 +133,7 @@ cursor:not-allowed;
 }
 </style>
 </head>
+
 <body>
 
 <header>
@@ -144,7 +147,7 @@ cursor:not-allowed;
 
 <h1>[New Life+] Young Again in Another World</h1>
 
-<button id="volumeBtn" class="volumeBtn">Volume 1 ▼</button>
+<button id="volumeBtn">Volume 1 ▼</button>
 
 <div class="controls">
 
@@ -174,8 +177,11 @@ cursor:not-allowed;
 <div id="content"></div>
 
 <div class="nav">
+
 <button id="prev">◀ Previous</button>
+
 <button id="next">Next ▶</button>
+
 </div>
 
 </div>
@@ -185,32 +191,34 @@ cursor:not-allowed;
 <script>
 
 const files=[
-'texts/new-life-young-again-v1.txt',
-'texts/new-life-young-again-v2.txt',
-'texts/new-life-young-again-v3.txt'
+"texts/new-life-young-again-v1.txt",
+"texts/new-life-young-again-v2.txt",
+"texts/new-life-young-again-v3.txt"
 ];
 
 const params=new URLSearchParams(location.search);
 
-let volume=Number(params.get('ch'))||0;
-let current=0;
+let volume=Number(params.get("ch"))||0;
+
 let chapters=[];
 
-const volumeBtn=document.getElementById('volumeBtn');
-const chapterSelect=document.getElementById('chapterSelect');
-const chapterTitle=document.getElementById('chapterTitle');
-const content=document.getElementById('content');
-const fontSelect=document.getElementById('fontSelect');
-const sizeSelect=document.getElementById('sizeSelect');
-const prev=document.getElementById('prev');
-const next=document.getElementById('next');
+let current=0;
+
+const volumeBtn=document.getElementById("volumeBtn");
+const chapterSelect=document.getElementById("chapterSelect");
+const chapterTitle=document.getElementById("chapterTitle");
+const content=document.getElementById("content");
+const fontSelect=document.getElementById("fontSelect");
+const sizeSelect=document.getElementById("sizeSelect");
+const prev=document.getElementById("prev");
+const next=document.getElementById("next");
 
 fontSelect.onchange=()=>{
 content.style.fontFamily=fontSelect.value;
 };
 
 sizeSelect.onchange=()=>{
-content.style.fontSize=sizeSelect.value+'px';
+content.style.fontSize=sizeSelect.value+"px";
 };
 
 volumeBtn.onclick=()=>{
@@ -227,40 +235,75 @@ let text=await fetch(files[volume]).then(r=>r.text());
 
 text=text.replace(/\r/g,'');
 
-if(volume===0){
+if(volume===0) chapters=parseV1(text);
+if(volume===1) chapters=parseV2(text);
+if(volume===2) chapters=parseV3(text);
+
+chapterSelect.innerHTML='';
+
+chapters.forEach((c,i)=>{
+chapterSelect.innerHTML+=`<option value="${i}">${c.title}</option>`;
+});
+
+current=0;
+
+show();
+
+}
+
+function parseV1(text){
 
 const p=[...text.matchAll(/^Prologue:/gm)];
 
 if(p.length>=2) text=text.slice(p[1].index);
 
+const after=text.search(/^Afterword/m);
+
+if(after!=-1) text=text.slice(0,after);
+
+return split(text,true);
+
 }
 
-else if(volume===1){
+function parseV2(text){
 
 const p=[...text.matchAll(/^Prologue:/gm)];
 
-if(p.length>=2)
+if(p.length>=2){
+
 text=text.slice(p[1].index);
-else if(p.length===1)
+
+}else if(p.length){
+
 text=text.slice(p[0].index);
-
-}
-
-else{
-
-const s=text.search(/^(Prologue:|Chapter\s+\d+:|Interlude:)/m);
-
-if(s!==-1)
-text=text.slice(s);
 
 }
 
 const after=text.search(/^Afterword/m);
 
-if(after!==-1)
-text=text.slice(0,after);
+if(after!=-1) text=text.slice(0,after);
 
-chapters=[];
+return split(text,true);
+
+}
+
+function parseV3(text){
+
+const s=text.search(/^(Prologue:|Chapter\s+\d+:|Interlude:)/m);
+
+if(s!=-1) text=text.slice(s);
+
+const after=text.search(/^Afterword/m);
+
+if(after!=-1) text=text.slice(0,after);
+
+return split(text,false);
+
+}
+
+function split(text,rename){
+
+const list=[];
 
 const rx=/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*|Epilogue:.*)$/gm;
 
@@ -274,35 +317,29 @@ const end=i+1<heads.length?heads[i+1].index:text.length;
 
 let title=heads[i][0];
 
-if(title.startsWith('Prologue'))
-title='Chapter 1';
+if(rename&&title.startsWith("Prologue"))
+title="Chapter 1";
 
 let body=text.slice(start+heads[i][0].length,end).trim();
 
-body=body.replace(/^Was Told\s*/,'');
-body=body.replace(/^Told\s*/,'');
+body=body
+.replace(/^Was Told\s*/,'')
+.replace(/^Told\s*/,'');
 
-chapters.push({title,body});
-
-}
-
-if(!chapters.length){
-
-chapters=[{title:'Chapter 1',body:text.trim()}];
+list.push({title,body});
 
 }
 
-chapterSelect.innerHTML='';
+if(!list.length){
 
-chapters.forEach((c,i)=>{
-
-chapterSelect.innerHTML+=`<option value="${i}">${c.title}</option>`;
-
+list.push({
+title:"Chapter 1",
+body:text.trim()
 });
 
-current=0;
+}
 
-show();
+return list;
 
 }
 
@@ -315,10 +352,12 @@ chapterTitle.textContent=chapters[current].title;
 content.textContent=chapters[current].body;
 
 prev.disabled=current===0;
-
 next.disabled=current===chapters.length-1;
 
-window.scrollTo({top:0,behavior:'smooth'});
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
 
 }
 
