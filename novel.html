@@ -2,69 +2,74 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FreeNovel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreeNovel Reader</title>
 
 <style>
+*{margin:0;padding:0;box-sizing:border-box;}
 body{
-margin:0;
-font-family:Arial,sans-serif;
-background:#eef2f3;
+  font-family:Arial,sans-serif;
+  background:#dfe4e4;
 }
-
 header{
-background:#00897b;
-padding:15px;
+  background:#00897b;
+  padding:18px;
 }
-
 header a{
-color:#fff;
-text-decoration:none;
-font-size:32px;
-display:flex;
-align-items:center;
-gap:10px;
+  color:#fff;
+  text-decoration:none;
+  font-size:42px;
 }
-
-.logo{
-width:42px;
-}
-
 .container{
-max-width:900px;
-margin:auto;
-padding:20px;
+  max-width:900px;
+  margin:20px auto;
+  padding:15px;
 }
-
 .card{
-background:#fff;
-padding:20px;
-border-radius:25px;
-text-align:center;
+  background:#fff;
+  border-radius:28px;
+  padding:25px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
 }
-
-.cover{
-width:240px;
-max-width:100%;
-border-radius:20px;
+h1{
+  text-align:center;
+  margin-bottom:20px;
 }
-
-.volumes{
-display:flex;
-flex-direction:column;
-gap:15px;
-margin-top:30px;
+.viewer{
+  width:100%;
+  height:78vh;
+  border:none;
+  border-radius:15px;
+  background:#eee;
 }
-
+.controls{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:18px;
+}
 .btn{
-display:block;
-padding:18px;
-background:#00897b;
-color:#fff;
-text-decoration:none;
-border-radius:35px;
-font-size:22px;
-font-weight:bold;
+  background:#00897b;
+  color:#fff;
+  border:none;
+  border-radius:30px;
+  padding:14px 28px;
+  font-size:18px;
+  cursor:pointer;
+}
+.page{
+  font-size:20px;
+  font-weight:bold;
+}
+.back{
+  display:block;
+  margin-top:20px;
+  text-align:center;
+  background:#00897b;
+  color:#fff;
+  text-decoration:none;
+  padding:16px;
+  border-radius:30px;
 }
 </style>
 </head>
@@ -72,16 +77,23 @@ font-weight:bold;
 <body>
 
 <header>
-<a href="index.html">
-<img src="assets/logo.png" class="logo">
-FreeNovel
-</a>
+  <a href="index.html">📚 FreeNovel</a>
 </header>
 
 <div class="container">
-<div class="card" id="novel">
+<div class="card">
 
-Loading...
+<h1 id="title">Loading...</h1>
+
+<iframe id="viewer" class="viewer"></iframe>
+
+<div class="controls">
+<button class="btn" onclick="prevPage()">◀ Prev</button>
+<div class="page" id="pageNum">Page 1</div>
+<button class="btn" onclick="nextPage()">Next ▶</button>
+</div>
+
+<a id="backNovel" class="back">← Back to Novel</a>
 
 </div>
 </div>
@@ -89,38 +101,56 @@ Loading...
 <script>
 const params = new URLSearchParams(location.search);
 const id = params.get("id");
+const ch = parseInt(params.get("ch") || "1");
 
-async function load(){
+let page = 1;
+let pdf = "";
 
-const data = await fetch(`data/${id}.json`).then(r=>r.json());
+async function loadReader(){
 
-document.getElementById("novel").innerHTML=`
-<img class="cover" src="${data.cover}">
-<h1>${data.title}</h1>
-<p>${data.author}</p>
-<p>${data.genre}</p>
-<p>${data.chapters.length} Volumes · Ongoing</p>
+  const novel = await fetch(`data/${id}.json`).then(r=>r.json());
 
-<h2>Volumes</h2>
+  const chapter = novel.chapters[ch-1];
 
-<div class="volumes">
+  if(!chapter) throw "Chapter not found";
 
-${data.chapters.map((v,i)=>`
-<a class="btn" href="read.html?id=${id}&ch=${i+1}">
-${v.title}
-</a>
-`).join("")}
+  document.getElementById("title").innerText =
+    novel.title + " — " + chapter.title;
 
-</div>
-`;
+  document.getElementById("backNovel").href =
+    "novel.html?id=" + id;
 
+  pdf = chapter.pdf;
+
+  loadPage();
 }
 
-load().catch(()=>{
-document.getElementById("novel").innerHTML=`
-<h2>Novel not found</h2>
-<a class="btn" href="index.html">← Back Home</a>
-`;
+function loadPage(){
+  document.getElementById("viewer").src =
+    pdf + "#page=" + page + "&zoom=page-width";
+
+  document.getElementById("pageNum").innerText =
+    "Page " + page;
+}
+
+function nextPage(){
+  page++;
+  loadPage();
+}
+
+function prevPage(){
+  if(page>1){
+    page--;
+    loadPage();
+  }
+}
+
+loadReader().catch(err=>{
+  document.querySelector(".card").innerHTML=`
+    <h1>Reader Error</h1>
+    <p style="text-align:center;margin:20px 0;">${err}</p>
+    <a class="back" href="index.html">← Back Home</a>
+  `;
 });
 </script>
 
