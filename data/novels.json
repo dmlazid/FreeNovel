@@ -1,37 +1,11 @@
 [
   {
-    "id": "demo",
-    "title": "Demo Survival Novel",
-    "author": "FreeNovel",
-    "cover": "https://picsum.photos/300/420?random=1",
-    "chapters": 2,
-    "status": "Ongoing",
-    "genre": "Fantasy"
-  },
-  {
-    "id": "detective",
-    "title": "Mystery Detective",
-    "author": "FreeNovel",
-    "cover": "https://picsum.photos/300/420?random=2",
-    "chapters": 120,
-    "status": "Completed",
-    "genre": "Mystery"
-  },
-  {
-    "id": "dragon",
-    "title": "Dragon King",
-    "author": "Me",
-    "cover": "https://picsum.photos/300/420?random=5",
-    "chapters": 500,
-    "status": "Ongoing",
-    "genre": "Fantasy"
-  },
-  {
-    "id": "-new-life-young-again-in-another-world",
+    "id": "new-life-young-again-in-another-world",
     "title": "[New Life+] Young Again in Another World",
     "author": "Mine Illustrator Kabocha",
     "genre": "Action, Adventure, Comedy, Fantasy, Harem, Romance, Seinen",
-    "cover": "covers/-new-life-young-again-in-another-world.jpg",
-    "volumes": 3
+    "cover": "covers/new-life-young-again-in-another-world.jpg",
+    "chapters": 3,
+    "status": "Ongoing"
   }
 ]
