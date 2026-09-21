@@ -3,346 +3,144 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <title>FreeNovel Reader</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-
 <style>
-
 *{box-sizing:border-box}
-
-body{
-margin:0;
-background:#e7eceb;
-font-family:Poppins,sans-serif;
-}
-
-header{
-background:#00897b;
-padding:16px;
-position:sticky;
-top:0;
-z-index:100;
-}
-
-.logo{
-height:48px;
-}
-
-.wrap{
-max-width:760px;
-margin:auto;
-padding:18px;
-}
-
-.title{
-text-align:center;
-color:#00897b;
-font-size:22px;
-font-weight:700;
-}
-
-.subtitle{
-text-align:center;
-font-size:16px;
-color:#666;
-margin-bottom:18px;
-}
-
-.controls{
-display:grid;
-grid-template-columns:1fr 1fr 1fr;
-gap:10px;
-margin-bottom:15px;
-}
-
-select{
-width:100%;
-padding:12px;
-border:none;
-border-radius:10px;
-background:#00897b;
-color:white;
-font-family:Poppins;
-font-size:16px;
-}
-
-.reader{
-background:white;
-border-radius:18px;
-padding:26px;
-box-shadow:0 4px 12px rgba(0,0,0,.08);
-}
-
-#chapterTitle{
-font-size:28px;
-font-weight:700;
-margin-bottom:22px;
-line-height:1.35;
-}
-
-#content{
-font-size:18px;
-line-height:1.95;
-color:#222;
-white-space:pre-wrap;
-word-break:break-word;
-}
-
-.nav{
-display:flex;
-justify-content:space-between;
-gap:10px;
-margin-top:24px;
-}
-
-button{
-flex:1;
-padding:14px;
-border:none;
-border-radius:12px;
-background:#00897b;
-color:white;
-font-family:Poppins;
-font-size:17px;
-font-weight:600;
-}
-
-button:disabled{
-opacity:.45;
-}
-
+body{margin:0;background:#e6eceb;font-family:Poppins,sans-serif}
+header{background:#00897b;padding:14px;position:sticky;top:0;z-index:100}
+.logo{height:46px}
+.wrap{max-width:760px;margin:auto;padding:18px}
+h1{color:#00897b;text-align:center;margin:10px 0}
+h2{text-align:center;color:#666;font-weight:500}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:18px 0}
+select{padding:12px;border:none;border-radius:10px;background:#00897b;color:#fff;font:16px Poppins}
+.reader{background:#fff;border-radius:20px;padding:28px}
+#chapterTitle{font-size:28px;font-weight:700;line-height:1.3;margin-bottom:20px}
+#content{font-size:18px;line-height:1.95;white-space:pre-wrap;color:#222}
+.nav{display:flex;gap:10px;margin-top:22px}
+button{flex:1;padding:14px;border:none;border-radius:12px;background:#00897b;color:#fff;font:600 17px Poppins}
+button:disabled{opacity:.45}
 </style>
 </head>
 <body>
 
-<header>
-<a href="index.html">
-<img src="assets/logo.png" class="logo">
-</a>
-</header>
+<header><a href="index.html"><img src="assets/logo.png" class="logo"></a></header>
 
 <div class="wrap">
-
-<div class="title" id="novelTitle"></div>
-<div class="subtitle" id="volumeTitle"></div>
+<h1 id="novelTitle"></h1>
+<h2 id="volumeTitle"></h2>
 
 <div class="controls">
-
 <select id="chapterSelect"></select>
-
 <select id="fontSelect">
-<option value="Poppins">Poppins</option>
-<option value="Georgia">Serif</option>
-<option value="Arial">Sans</option>
+<option>Poppins</option>
+<option>Georgia</option>
+<option>Arial</option>
 </select>
-
 <select id="sizeSelect">
-<option>16</option>
-<option selected>18</option>
-<option>20</option>
-<option>22</option>
-<option>24</option>
-<option>26</option>
-<option>28</option>
-<option>30</option>
+<option>16</option><option selected>18</option><option>20</option>
+<option>22</option><option>24</option><option>26</option><option>28</option>
 </select>
-
 </div>
 
 <div class="reader">
-
 <div id="chapterTitle"></div>
-
 <div id="content"></div>
 
 <div class="nav">
-
 <button id="prev">◀ Previous</button>
-
 <button id="next">Next ▶</button>
-
 </div>
-
 </div>
-
 </div>
 
 <script>
-
 const params=new URLSearchParams(location.search);
-
-const id=params.get("id");
-
 const volume=Number(params.get("ch")||0);
-
-let chapters=[];
-
-let current=0;
-
-const content=document.getElementById("content");
-
+const novelTitle=document.getElementById("novelTitle");
+const volumeTitle=document.getElementById("volumeTitle");
 const chapterTitle=document.getElementById("chapterTitle");
-
+const content=document.getElementById("content");
 const chapterSelect=document.getElementById("chapterSelect");
-
 const prev=document.getElementById("prev");
-
 const next=document.getElementById("next");
-
 const fontSelect=document.getElementById("fontSelect");
-
 const sizeSelect=document.getElementById("sizeSelect");
 
-function savePrefs(){
+const files=[
+"texts/new-life-young-again-v1.txt",
+"texts/new-life-young-again-v2.txt",
+"texts/new-life-young-again-v3.txt"
+];
 
-localStorage.setItem("readerFont",fontSelect.value);
+novelTitle.textContent="[New Life+] Young Again in Another World";
+volumeTitle.textContent="Volume "+(volume+1);
 
-localStorage.setItem("readerSize",sizeSelect.value);
+fontSelect.value=localStorage.getItem("font")||"Poppins";
+sizeSelect.value=localStorage.getItem("size")||"18";
 
+function applyStyle(){
 content.style.fontFamily=fontSelect.value;
-
 content.style.fontSize=sizeSelect.value+"px";
-
+localStorage.font=fontSelect.value;
+localStorage.size=sizeSelect.value;
 }
+fontSelect.onchange=applyStyle;
+sizeSelect.onchange=applyStyle;
+applyStyle();
 
-fontSelect.onchange=savePrefs;
+let chapters=[],current=0;
 
-sizeSelect.onchange=savePrefs;
-
-fontSelect.value=localStorage.getItem("readerFont")||"Poppins";
-
-sizeSelect.value=localStorage.getItem("readerSize")||"18";
-
-savePrefs();
-
-function splitChapters(text){
+fetch(files[volume]).then(r=>r.text()).then(text=>{
 
 text=text.replace(/\r/g,"");
 
-text=text.replace(/Table of Contents[\s\S]*?(?=Prologue:|Chapter\s+1:)/i,"");
-
-const first=text.indexOf("Prologue:");
-
-if(first>0)text=text.slice(first);
+// Skip TOC by jumping to SECOND Prologue if it exists
+const pros=[...text.matchAll(/Prologue:/g)];
+if(pros.length>=2){
+text=text.slice(pros[1].index);
+}else{
+const first=text.search(/Prologue:|Chapter\s+1:/);
+if(first>0) text=text.slice(first);
+}
 
 const regex=/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*|Epilogue:.*|Afterword.*)$/gm;
+const m=[...text.matchAll(regex)];
 
-const matches=[...text.matchAll(regex)];
-
-const arr=[];
-
-for(let i=0;i<matches.length;i++){
-
-const start=matches[i].index;
-
-const end=i+1<matches.length?matches[i+1].index:text.length;
-
-arr.push({
-
-title:matches[i][0].trim(),
-
-body:text.slice(start,end).replace(matches[i][0],"").trim()
-
+for(let i=0;i<m.length;i++){
+const start=m[i].index;
+const end=i+1<m.length?m[i+1].index:text.length;
+chapters.push({
+title:m[i][0],
+body:text.slice(start+m[i][0].length,end).trim()
 });
-
 }
-
-return arr;
-
-}
-
-async function load(){
-
-const novel=await fetch(`data/${id}.json`).then(r=>r.json());
-
-document.getElementById("novelTitle").textContent=novel.title;
-
-document.getElementById("volumeTitle").textContent=novel.chapters[volume].title;
-
-const txt=await fetch(novel.chapters[volume].text).then(r=>r.text());
-
-chapters=splitChapters(txt);
 
 chapterSelect.innerHTML="";
-
 chapters.forEach((c,i)=>{
-
 const o=document.createElement("option");
-
 o.value=i;
-
 o.textContent=c.title;
-
 chapterSelect.appendChild(o);
-
 });
-
-current=Number(params.get("c")||0);
 
 show();
 
-}
+});
 
 function show(){
-
 chapterSelect.value=current;
-
 chapterTitle.textContent=chapters[current].title;
-
 content.textContent=chapters[current].body;
-
 prev.disabled=current===0;
-
 next.disabled=current===chapters.length-1;
-
-history.replaceState({},'',`?id=${id}&ch=${volume}&c=${current}`);
-
-window.scrollTo({top:0});
-
+scrollTo(0,0);
 }
 
-chapterSelect.onchange=()=>{
-
-current=Number(chapterSelect.value);
-
-show();
-
-};
-
-prev.onclick=()=>{
-
-if(current>0){
-
-current--;
-
-show();
-
-}
-
-};
-
-next.onclick=()=>{
-
-if(current<chapters.length-1){
-
-current++;
-
-show();
-
-}
-
-};
-
-load().catch(e=>{
-
-chapterTitle.textContent="Error";
-
-content.textContent=e.message;
-
-});
-
+chapterSelect.onchange=()=>{current=+chapterSelect.value;show();}
+prev.onclick=()=>{if(current){current--;show();}}
+next.onclick=()=>{if(current<chapters.length-1){current++;show();}}
 </script>
 
 </body>
