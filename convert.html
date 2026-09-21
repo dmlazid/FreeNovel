@@ -3,121 +3,218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FreeNovel One-Click Converter</title>
+<title>FreeNovel Chapter Converter</title>
+
 <style>
-body{font-family:system-ui;background:#f3f3f3;margin:0;padding:24px}
-.card{max-width:720px;margin:auto;background:#fff;padding:24px;border-radius:16px}
-h1{color:#00897b;text-align:center}
-input,button{width:100%;padding:14px;font-size:16px;margin-top:12px;border-radius:8px;border:1px solid #ccc}
-button{background:#00897b;color:#fff;border:none;font-weight:600}
-#log{white-space:pre-wrap;background:#f7f7f7;padding:16px;border-radius:8px;margin-top:16px}
+body{
+font-family:system-ui,-apple-system,sans-serif;
+background:#f3f3f3;
+margin:0;
+padding:24px;
+}
+.card{
+max-width:720px;
+margin:auto;
+background:white;
+padding:24px;
+border-radius:16px;
+}
+h1{
+text-align:center;
+color:#00897b;
+}
+button{
+width:100%;
+padding:16px;
+font-size:18px;
+border:none;
+border-radius:10px;
+background:#00897b;
+color:white;
+font-weight:bold;
+}
+#log{
+margin-top:20px;
+background:#f7f7f7;
+padding:15px;
+border-radius:10px;
+white-space:pre-wrap;
+}
 </style>
 </head>
 <body>
 
 <div class="card">
-<h1>📚 One-Click PDF → GitHub</h1>
 
-<input id="token" type="password" placeholder="GitHub Personal Access Token">
+<h1>📚 Convert All PDFs</h1>
 
-<button onclick="convertAll()">Convert & Upload</button>
+<button onclick="convertAll()">Convert All Chapters</button>
 
 <div id="log">Ready.</div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+pdfjsLib.GlobalWorkerOptions.workerSrc=
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-const OWNER="dmlazid";
-const REPO="FreeNovel";
-const BRANCH="main";
-const BOOK="new-life-young-again";
-
-const volumes=[
-["Volume 1","pdfs/new-life-young-again-v1.pdf","v1.json"],
-["Volume 2","pdfs/new-life-young-again-v2.pdf","v2.json"],
-["Volume 3","pdfs/new-life-young-again-v3.pdf","v3.json"]
+const PDFs=[
+"pdfs/new-life-young-again-v1.pdf",
+"pdfs/new-life-young-again-v2.pdf",
+"pdfs/new-life-young-again-v3.pdf"
 ];
 
 const log=document.getElementById("log");
-const write=t=>log.textContent+="\n"+t;
 
-async function pdfText(url){
- const pdf=await pdfjsLib.getDocument(url).promise;
- let text="";
- for(let p=1;p<=pdf.numPages;p++){
-  const page=await pdf.getPage(p);
-  const tc=await page.getTextContent();
-  let y=null;
-  tc.items.forEach(i=>{
-   if(y!==null&&Math.abs(i.transform[5]-y)>8) text+="\n";
-   text+=i.str+" ";
-   y=i.transform[5];
-  });
-  text+="\n\n";
- }
- return text
- .replace(/Table of Contents[\s\S]*?Prologue:/i,"Prologue:")
- .replace(/Cover/gi,"")
- .replace(/Color Illustrations/gi,"")
- .trim();
+function write(t){
+log.textContent+="\n"+t;
 }
 
-async function upload(path,obj,token){
+async function pdfToText(url){
 
- const api=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`;
+const pdf=await pdfjsLib.getDocument(url).promise;
 
- let sha=null;
- const old=await fetch(api,{headers:{Authorization:"token "+token}});
- if(old.ok) sha=(await old.json()).sha;
+let text="";
 
- const content=btoa(unescape(encodeURIComponent(JSON.stringify(obj,null,2))));
+for(let p=1;p<=pdf.numPages;p++){
 
- await fetch(api,{
-  method:"PUT",
-  headers:{
-   Authorization:"token "+token,
-   "Content-Type":"application/json"
-  },
-  body:JSON.stringify({
-   message:"Auto convert PDF to JSON",
-   content,
-   branch:BRANCH,
-   sha
-  })
- });
+const page=await pdf.getPage(p);
+const tc=await page.getTextContent();
+
+let y=null;
+
+tc.items.forEach(i=>{
+
+if(y!==null&&Math.abs(i.transform[5]-y)>8)
+text+="\n";
+
+text+=i.str+" ";
+
+y=i.transform[5];
+
+});
+
+text+="\n\n";
+
+}
+
+return text;
+}
+
+function clean(text){
+
+text=text.replace(/\r/g,"");
+
+text=text.replace(/Table of Contents[\s\S]*?(?=(?:\n|\r\n)Prologue:|(?:\n|\r\n)Chapter\s*1:)/i,"");
+
+text=text.replace(/^Cover$/gim,"");
+text=text.replace(/^Color Illustrations$/gim,"");
+text=text.replace(/^Copyright$/gim,"");
+text=text.replace(/^About J-Novel Club$/gim,"");
+
+const pros=[...text.matchAll(/(^|\n)Prologue:/gm)];
+
+if(pros.length>=2)
+text=text.slice(pros[1].index);
+
+text=text.replace(/\n{3,}/g,"\n\n").trim();
+
+return text;
+
+}
+
+function split(text){
+
+const regex=/(^|\n)(Prologue:.*?|Chapter\s+\??\d+:.*?|Interlude:.*?|Epilogue:.*?|Afterword)/gm;
+
+const matches=[...text.matchAll(regex)];
+
+const chapters=[];
+
+for(let i=0;i<matches.length;i++){
+
+const start=matches[i].index;
+const end=i+1<matches.length?matches[i+1].index:text.length;
+
+const chunk=text.slice(start,end).trim();
+
+const title=matches[i][2].replace(/\n/g," ").trim();
+
+chapters.push({
+title,
+text:chunk
+});
+
+}
+
+return chapters;
 
 }
 
 async function convertAll(){
 
- const token=document.getElementById("token").value.trim();
+log.textContent="Starting...\n";
 
- if(!token){
-  alert("Enter GitHub token.");
-  return;
- }
+let all=[];
 
- log.textContent="Starting...\n";
+for(const pdf of PDFs){
 
- for(const [title,pdf,file] of volumes){
+write("Reading "+pdf);
 
-  write("Converting "+title+"...");
+let text=await pdfToText(pdf);
 
-  const text=await pdfText(pdf);
+text=clean(text);
 
-  await upload(
-   `chapters/${BOOK}/${file}`,
-   {title,text},
-   token
-  );
+const chapters=split(text);
 
-  write("✓ Uploaded "+file);
+all.push(...chapters);
 
- }
+}
 
- write("\nDone! Refresh your site.");
+const list=[];
+
+for(let i=0;i<all.length;i++){
+
+const name=`chapter-${i+1}.json`;
+
+list.push({
+id:i+1,
+title:all[i].title,
+file:name
+});
+
+const blob=new Blob(
+[JSON.stringify(all[i],null,2)],
+{type:"application/json"}
+);
+
+const a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+a.download=name;
+a.click();
+
+await new Promise(r=>setTimeout(r,300));
+
+}
+
+const blob=new Blob(
+[JSON.stringify(list,null,2)],
+{type:"application/json"}
+);
+
+const a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+a.download="chapters.json";
+a.click();
+
+write("\nDone!");
+write("Upload every chapter-*.json and chapters.json");
+write("to chapters/new-life-young-again/");
+
 }
 </script>
 
