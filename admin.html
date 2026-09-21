@@ -172,36 +172,39 @@ async function publish() {
   const title = document.getElementById("title").value.trim();
   const author = document.getElementById("author").value.trim();
   const genre = document.getElementById("genre").value.trim();
-  const coverFile = document.getElementById("coverFile").files[0];
-const cover = coverFile ? `covers/${id}.jpg` : "";
 
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
+  const coverFile = document.getElementById("coverFile").files[0];
+  const cover = coverFile ? `covers/${id}.jpg` : "";
+
   const pdfFiles = document.getElementById("pdfInput").files;
-if (!pdfFiles.length) return alert("Choose one or more PDFs.");
+  if (!pdfFiles.length) return alert("Choose one or more PDFs.");
 
-let raw = "";
+  let raw = "";
 
-for (const pdfFile of pdfFiles) {
-  const pdf = await pdfjsLib.getDocument(await pdfFile.arrayBuffer()).promise;
+  for (const pdfFile of pdfFiles) {
+    const pdf = await pdfjsLib.getDocument({
+      data: await pdfFile.arrayBuffer()
+    }).promise;
 
-  await uploadFile(
-    token,
-    repo,
-    `pdfs/${pdfFile.name}`,
-    await pdfFile.arrayBuffer()
-  );
+    await uploadFile(
+      token,
+      repo,
+      `pdfs/${pdfFile.name}`,
+      await pdfFile.arrayBuffer()
+    );
 
-  for (let p = 1; p <= pdf.numPages; p++) {
-    const page = await pdf.getPage(p);
-    const text = await page.getTextContent();
-    raw += text.items.map(i => i.str).join(" ") + "\n";
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const text = await page.getTextContent();
+      raw += text.items.map(i => i.str).join(" ") + "\n";
+    }
   }
-}
 
-const chapters = raw
-  .split(/(?=Chapter\s+\d+)/i)
-  .filter(x => x.trim());
+  const chapters = raw
+    .split(/(?=Chapter\s+\d+)/i)
+    .filter(x => x.trim());
 
   const json = {
     title,
