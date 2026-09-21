@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>FreeNovel Reader</title>
 
 <style>
@@ -13,125 +13,98 @@ body{
 }
 header{
   background:#00897b;
-  color:#fff;
-  padding:20px;
-  font-size:38px;
+  padding:18px;
 }
-header a{color:white;text-decoration:none;}
-
+header a{
+  color:#fff;
+  text-decoration:none;
+  font-size:42px;
+}
 .card{
-  background:white;
+  background:#fff;
   margin:20px;
   border-radius:28px;
   padding:20px;
+}
+h2{
   text-align:center;
 }
-
-#pdfCanvas{
+#viewer{
   width:100%;
-  height:auto;
-  border-radius:12px;
+  height:80vh;
+  border:none;
+  border-radius:16px;
+  background:#fff;
 }
-
-.controls{
+.topnav{
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  margin-top:20px;
+  margin-bottom:15px;
 }
-
-button{
+.btn{
   background:#00897b;
-  color:white;
-  border:none;
+  color:#fff;
+  padding:12px 22px;
   border-radius:30px;
-  padding:14px 26px;
-  font-size:20px;
+  text-decoration:none;
+  font-weight:bold;
 }
 </style>
 </head>
-
 <body>
 
-<header><a href="index.html">📚 FreeNovel</a></header>
+<header>
+<a href="index.html">📚 FreeNovel</a>
+</header>
 
 <div class="card">
 
-<h1 id="title">Loading...</h1>
-
-<canvas id="pdfCanvas"></canvas>
-
-<div class="controls">
-<button id="prev">◀ Prev</button>
-<div id="pageInfo">Page 1 / 1</div>
-<button id="next">Next ▶</button>
+<div class="topnav">
+<a id="prev" class="btn">◀ Prev Volume</a>
+<a id="next" class="btn">Next Volume ▶</a>
 </div>
 
-</div>
+<h2 id="title">Loading...</h2>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<iframe id="viewer"></iframe>
+
+</div>
 
 <script>
 const params=new URLSearchParams(location.search);
 const id=params.get("id");
-const ch=parseInt(params.get("ch")||"1");
+let ch=parseInt(params.get("ch")||1);
 
-let pdfDoc=null;
-let pageNum=1;
+fetch(`data/${id}.json`)
+.then(r=>r.json())
+.then(book=>{
 
-async function renderPage(num){
- const page=await pdfDoc.getPage(num);
- const viewport=page.getViewport({scale:1.8});
+const total=book.chapters.length;
+const current=book.chapters[ch-1];
 
- const canvas=document.getElementById("pdfCanvas");
- const ctx=canvas.getContext("2d");
+document.getElementById("title").textContent=
+`${book.title} — ${current.title}`;
 
- canvas.width=viewport.width;
- canvas.height=viewport.height;
+document.getElementById("viewer").src=current.pdf+"#toolbar=0&navpanes=0";
 
- await page.render({canvasContext:ctx,viewport}).promise;
+const prev=document.getElementById("prev");
+const next=document.getElementById("next");
 
- document.getElementById("pageInfo").textContent=
- `Page ${num} / ${pdfDoc.numPages}`;
-
- document.getElementById("prev").disabled=num<=1;
- document.getElementById("next").disabled=num>=pdfDoc.numPages;
+if(ch>1){
+  prev.href=`read.html?id=${id}&ch=${ch-1}`;
+}else{
+  prev.style.visibility="hidden";
 }
 
-async function load(){
-
- const data=await fetch(`data/${id}.json`).then(r=>r.json());
-
- const chapter=data.chapters[ch-1];
-
- document.getElementById("title").textContent=
- `${data.title} — ${chapter.title}`;
-
- pdfjsLib.GlobalWorkerOptions.workerSrc=
- "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
- pdfDoc=await pdfjsLib.getDocument(chapter.pdf).promise;
-
- renderPage(1);
-
- document.getElementById("prev").onclick=()=>{
-  if(pageNum>1){
-   pageNum--;
-   renderPage(pageNum);
-  }
- };
-
- document.getElementById("next").onclick=()=>{
-  if(pageNum<pdfDoc.numPages){
-   pageNum++;
-   renderPage(pageNum);
-  }
- };
+if(ch<total){
+  next.href=`read.html?id=${id}&ch=${ch+1}`;
+}else{
+  next.style.visibility="hidden";
 }
 
-load().catch(e=>{
- document.querySelector(".card").innerHTML=
- `<h2>Error</h2><p>${e.message}</p>`;
+})
+.catch(()=>{
+document.querySelector(".card").innerHTML="<h2>Reader failed to load.</h2>";
 });
 </script>
 
