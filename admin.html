@@ -49,7 +49,7 @@ font-size:16px;
 <input id="coverFile" type="file" accept="image/*">
 
 <label>Novel PDF</label>
-<input id="pdfInput" type="file" accept=".pdf">
+<input id="pdfInput" type="file" accept=".pdf" multiple>
   
 <input id="token" type="password" placeholder="GitHub Personal Access Token">
 
@@ -177,16 +177,26 @@ const cover = coverFile ? `covers/${id}.jpg` : "";
 
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-  const pdfFile = document.getElementById("pdfInput").files[0];
-if (!pdfFile) return alert("Choose a PDF.");
-
-const pdf = await pdfjsLib.getDocument(await pdfFile.arrayBuffer()).promise;
+  const pdfFiles = document.getElementById("pdfInput").files;
+if (!pdfFiles.length) return alert("Choose one or more PDFs.");
 
 let raw = "";
-for (let p = 1; p <= pdf.numPages; p++) {
-  const page = await pdf.getPage(p);
-  const text = await page.getTextContent();
-  raw += text.items.map(i => i.str).join(" ") + "\n";
+
+for (const pdfFile of pdfFiles) {
+  const pdf = await pdfjsLib.getDocument(await pdfFile.arrayBuffer()).promise;
+
+  await uploadFile(
+    token,
+    repo,
+    `pdfs/${pdfFile.name}`,
+    await pdfFile.arrayBuffer()
+  );
+
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const text = await page.getTextContent();
+    raw += text.items.map(i => i.str).join(" ") + "\n";
+  }
 }
 
 const chapters = raw
