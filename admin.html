@@ -1,43 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FreeNovel Admin</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.js"></script>
-
 <style>
-body{
-font-family:Arial,sans-serif;
-background:#eef2f3;
-padding:20px;
-max-width:700px;
-margin:auto;
-}
-input,button,textarea{
-width:100%;
-padding:12px;
-margin:8px 0;
-border-radius:10px;
-border:1px solid #ccc;
-box-sizing:border-box;
-}
-button{
-background:#00897B;
-color:#fff;
-font-size:18px;
-border:none;
-cursor:pointer;
-}
-button:disabled{
-opacity:.6;
-cursor:not-allowed;
-}
-textarea{
-height:180px;
-font-family:monospace;
-}
+body{font-family:Arial;padding:20px;background:#eef2f3}
+input,button{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:1px solid #ccc}
+button{background:#00897b;color:#fff;border:none;font-size:16px}
+#log{white-space:pre-wrap;background:#fff;padding:12px;border-radius:10px;margin-top:12px}
 </style>
 </head>
 <body>
@@ -48,11 +19,11 @@ font-family:monospace;
 <input id="author" placeholder="Author">
 <input id="genre" placeholder="Genre">
 
-<label>Cover Image</label>
+<label>Cover</label>
 <input id="coverFile" type="file" accept="image/*">
 
-<label>Novel PDFs (Select as many as you want)</label>
-<input id="pdfInput" type="file" accept="application/pdf,.pdf" multiple>
+<label>Novel PDFs (multiple)</label>
+<input id="pdfInput" type="file" accept=".pdf,application/pdf" multiple>
 
 <input id="token" type="password" placeholder="GitHub Personal Access Token">
 <input id="repo" value="dmlazid/FreeNovel">
@@ -60,205 +31,117 @@ font-family:monospace;
 
 <button id="publishBtn">🚀 Publish to GitHub</button>
 
-<textarea id="log" readonly></textarea>
+<div id="log"></div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.worker.min.js";
+const logBox=document.getElementById("log");
+function log(t){logBox.textContent+=t+"\n";}
 
-const addLog=t=>{
-document.getElementById("log").value+=t+"\n";
-document.getElementById("log").scrollTop=
-document.getElementById("log").scrollHeight;
-};
+async function uploadFile(token,repo,path,file){
+ const branch=document.getElementById("branch").value.trim();
+ const url=`https://api.github.com/repos/${repo}/contents/${path}`;
+ const bytes=new Uint8Array(await file.arrayBuffer());
+ let binary="";
+ for(let i=0;i<bytes.length;i+=0x8000){
+   binary+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));
+ }
+ let sha;
+ const old=await fetch(url+`?ref=${branch}`,{
+  headers:{Authorization:`Bearer ${token}`,Accept:"application/vnd.github+json"}
+ });
+ if(old.ok) sha=(await old.json()).sha;
 
-function slug(s){
-return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+ const res=await fetch(url,{
+  method:"PUT",
+  headers:{Authorization:`Bearer ${token}`,Accept:"application/vnd.github+json"},
+  body:JSON.stringify({
+   message:`Upload ${path}`,
+   content:btoa(binary),
+   branch,
+   sha
+  })
+ });
+ if(!res.ok) throw new Error(await res.text());
 }
-
-function uint8ToBase64(bytes){
-let binary="";
-const chunk=8192;
-for(let i=0;i<bytes.length;i+=chunk){
-binary+=String.fromCharCode(...bytes.subarray(i,i+chunk));
-}
-return btoa(binary);
-}
-
-async function uploadFile(token,repo,path,content){
-
-const url=`https://api.github.com/repos/${repo}/contents/${path}`;
-
-let sha;
-
-const old=await fetch(url,{
-headers:{
-Authorization:`Bearer ${token}`,
-Accept:"application/vnd.github+json"
-}
-});
-
-if(old.ok){
-sha=(await old.json()).sha;
-}
-
-const bytes=content instanceof Uint8Array?content:new TextEncoder().encode(content);
-
-const res=await fetch(url,{
-method:"PUT",
-headers:{
-Authorization:`Bearer ${token}`,
-Accept:"application/vnd.github+json"
-},
-body:JSON.stringify({
-message:`Upload ${path}`,
-content:uint8ToBase64(bytes),
-sha
-})
-});
-
-if(!res.ok){
-throw new Error(await res.text());
-}
-}
-
-document.getElementById("publishBtn").onclick=publish;
 
 async function publish(){
 
-const btn=document.getElementById("publishBtn");
-btn.disabled=true;
+ const btn=document.getElementById("publishBtn");
+ btn.disabled=true;
 
-document.getElementById("log").value="";
+ try{
 
-try{
+ const token=document.getElementById("token").value.trim();
+ const repo=document.getElementById("repo").value.trim();
+ const title=document.getElementById("title").value.trim();
+ const author=document.getElementById("author").value.trim();
+ const genre=document.getElementById("genre").value.trim();
+ const cover=document.getElementById("coverFile").files[0];
+ const pdfs=Array.from(document.getElementById("pdfInput").files);
 
-const token=document.getElementById("token").value.trim();
-const repo=document.getElementById("repo").value.trim();
-const title=document.getElementById("title").value.trim();
-const author=document.getElementById("author").value.trim();
-const genre=document.getElementById("genre").value.trim();
+ if(!token) throw new Error("Enter GitHub token.");
+ if(!title) throw new Error("Enter title.");
+ if(pdfs.length===0) throw new Error("Choose at least one PDF.");
 
-const coverFile=document.getElementById("coverFile").files[0];
+ const id=title.toLowerCase().replace(/[^a-z0-9]+/g,"-");
 
-const pdfFiles=[...document.getElementById("pdfInput").files];
+ log(`Uploading ${pdfs.length} PDFs...`);
 
-if(!token) throw new Error("Missing GitHub token.");
-if(!title) throw new Error("Missing title.");
-if(!pdfFiles.length) throw new Error("Choose one or more PDFs.");
+ for(const pdf of pdfs){
+   log("Uploading "+pdf.name);
+   await uploadFile(token,repo,`pdfs/${pdf.name}`,pdf);
+ }
 
-const id=slug(title);
-const cover=coverFile?`covers/${id}.jpg`:"";
+ if(cover){
+   log("Uploading cover...");
+   await uploadFile(token,repo,`covers/${id}.jpg`,cover);
+ }
 
-let raw="";
+ const chapterList=pdfs.map((p,i)=>({
+   title:`Volume ${i+1}`,
+   pdf:`pdfs/${p.name}`
+ }));
 
-addLog(`Found ${pdfFiles.length} PDF(s)`);
+ const jsonBlob=new Blob([JSON.stringify({
+   id,title,author,genre,
+   cover:cover?`covers/${id}.jpg`:"",
+   chapters:chapterList
+ },null,2)],{type:"application/json"});
 
-for(const pdfFile of pdfFiles){
+ await uploadFile(token,repo,`data/${id}.json`,new File([jsonBlob],`${id}.json`));
 
-addLog(`Uploading ${pdfFile.name}`);
+ let novels=[];
+ const branch=document.getElementById("branch").value.trim();
+ const old=await fetch(`https://raw.githubusercontent.com/${repo}/${branch}/data/novels.json`);
+ if(old.ok){
+   try{novels=await old.json();}catch{}
+ }
 
-const bytes=new Uint8Array(await pdfFile.arrayBuffer());
+ novels=novels.filter(n=>n.id!==id);
 
-await uploadFile(token,repo,`pdfs/${pdfFile.name}`,bytes);
+ novels.push({
+   id,title,author,genre,
+   cover:cover?`covers/${id}.jpg`:"",
+   volumes:pdfs.length
+ });
 
-const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+ const novelsBlob=new Blob([JSON.stringify(novels,null,2)],{type:"application/json"});
 
-for(let p=1;p<=pdf.numPages;p++){
-const page=await pdf.getPage(p);
-const text=await page.getTextContent();
-raw+=text.items.map(i=>i.str).join(" ")+"\n";
-}
+ await uploadFile(token,repo,"data/novels.json",new File([novelsBlob],"novels.json"));
 
-}
+ log("Done!");
+ alert("Published successfully!");
 
-let chapters=raw.split(/(?=Chapter\s+\d+)/i).filter(x=>x.trim());
-
-if(!chapters.length){
-chapters=[raw];
-}
-
-const json={
-title,
-author,
-cover,
-description:"",
-chapters:[]
-};
-
-for(let i=0;i<chapters.length;i++){
-
-const file=`chapters/${id}/ch${i+1}.txt`;
-
-await uploadFile(token,repo,file,chapters[i]);
-
-json.chapters.push({
-title:`Chapter ${i+1}`,
-file
-});
-
-}
-
-await uploadFile(
-token,
-repo,
-`data/${id}.json`,
-JSON.stringify(json,null,2)
-);
-
-if(coverFile){
-
-addLog("Uploading cover");
-
-const coverBytes=new Uint8Array(await coverFile.arrayBuffer());
-
-await uploadFile(
-token,
-repo,
-`covers/${id}.jpg`,
-coverBytes
-);
+ }catch(e){
+   alert(e.message);
+   log("ERROR: "+e.message);
+ }finally{
+   btn.disabled=false;
+ }
 
 }
 
-let novels=[];
-
-try{
-const r=await fetch(`https://raw.githubusercontent.com/${repo}/main/data/novels.json`);
-if(r.ok) novels=await r.json();
-}catch{}
-
-novels=novels.filter(n=>n.id!==id);
-
-novels.push({
-id,
-title,
-author,
-cover,
-chapters:chapters.length,
-status:"Ongoing",
-genre
-});
-
-await uploadFile(
-token,
-repo,
-"data/novels.json",
-JSON.stringify(novels,null,2)
-);
-
-addLog("Done!");
-alert("Novel published successfully.");
-
-}catch(err){
-
-console.error(err);
-alert(err.message);
-
-}finally{
-btn.disabled=false;
-}
-}
+document.getElementById("publishBtn").addEventListener("click",publish);
 </script>
 
 </body>
