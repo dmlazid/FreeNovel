@@ -6,62 +6,55 @@
 <title>FreeNovel Reader</title>
 
 <style>
-*{box-sizing:border-box;}
+*{box-sizing:border-box}
 body{
   margin:0;
-  background:#111;
-  color:white;
+  background:#dfe5e5;
   font-family:Arial,sans-serif;
 }
 header{
   background:#00897b;
   padding:18px;
-  position:sticky;
-  top:0;
-  z-index:10;
 }
 header a{
-  color:white;
+  color:#fff;
   text-decoration:none;
-  font-size:36px;
+  font-size:42px;
 }
-#title{
-  text-align:center;
-  margin:15px;
+.card{
+  background:#fff;
+  margin:20px;
+  border-radius:28px;
+  padding:20px;
 }
+h1{text-align:center}
+
+#page{
+  width:100%;
+  display:block;
+  border-radius:12px;
+}
+
 .nav{
   display:flex;
   justify-content:space-between;
+  align-items:center;
+  margin-top:20px;
   gap:10px;
-  padding:10px 15px;
 }
 .btn{
-  flex:1;
   background:#00897b;
-  color:white;
-  text-align:center;
-  padding:14px;
-  border-radius:30px;
+  color:#fff;
   text-decoration:none;
-  font-weight:bold;
+  border:none;
+  padding:16px 28px;
+  border-radius:30px;
+  font-size:20px;
+  cursor:pointer;
 }
-#pages{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:10px;
-  padding-bottom:30px;
-}
-canvas{
-  width:100%;
-  max-width:900px;
-  height:auto;
-  display:block;
-}
-.loading{
-  text-align:center;
-  padding:40px;
+#counter{
   font-size:22px;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -72,86 +65,86 @@ canvas{
 <a href="index.html">📚 FreeNovel</a>
 </header>
 
-<h2 id="title">Loading...</h2>
+<div class="card">
+
+<h1 id="title">Loading...</h1>
+
+<canvas id="page"></canvas>
 
 <div class="nav">
-<a id="prev" class="btn">◀ Previous Volume</a>
-<a id="next" class="btn">Next Volume ▶</a>
+<button id="prev" class="btn">◀ Prev</button>
+<div id="counter">Page 1/1</div>
+<button id="next" class="btn">Next ▶</button>
 </div>
 
-<div id="pages">
-<div class="loading">Loading pages...</div>
-</div>
-
-<div class="nav">
-<a id="prev2" class="btn">◀ Previous Volume</a>
-<a id="next2" class="btn">Next Volume ▶</a>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc =
 "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-const params = new URLSearchParams(location.search);
-const id = params.get("id");
-const ch = parseInt(params.get("ch") || "1");
+const params=new URLSearchParams(location.search);
+const id=params.get("id");
+const ch=parseInt(params.get("ch")||1);
 
-async function start(){
+let pdf,pageNum=1;
 
-  const book = await fetch(`data/${id}.json`).then(r=>r.json());
-  const volume = book.chapters[ch-1];
+async function load(){
 
-  document.getElementById("title").textContent =
-  `${book.title} — ${volume.title}`;
+ const book=await fetch(`data/${id}.json`).then(r=>r.json());
+ const volume=book.chapters[ch-1];
 
-  const total = book.chapters.length;
+ document.getElementById("title").textContent=
+ `${book.title} — ${volume.title}`;
 
-  function link(btn,n){
-    if(n<1||n>total){
-      btn.style.visibility="hidden";
-    }else{
-      btn.href=`read.html?id=${id}&ch=${n}`;
-    }
-  }
+ pdf=await pdfjsLib.getDocument(volume.pdf).promise;
 
-  link(prev,ch-1);
-  link(prev2,ch-1);
-  link(next,ch+1);
-  link(next2,ch+1);
-
-  const pdf = await pdfjsLib.getDocument(volume.pdf).promise;
-
-  const pages=document.getElementById("pages");
-  pages.innerHTML="";
-
-  for(let i=1;i<=pdf.numPages;i++){
-
-    const page=await pdf.getPage(i);
-
-    const viewport=page.getViewport({scale:1.8});
-
-    const canvas=document.createElement("canvas");
-    const ctx=canvas.getContext("2d");
-
-    canvas.width=viewport.width;
-    canvas.height=viewport.height;
-
-    await page.render({
-      canvasContext:ctx,
-      viewport
-    }).promise;
-
-    pages.appendChild(canvas);
-
-  }
+ render();
 
 }
 
-start().catch(err=>{
-document.getElementById("pages").innerHTML=
-`<div class="loading">Failed to load.<br>${err.message}</div>`;
+async function render(){
+
+ const page=await pdf.getPage(pageNum);
+
+ const canvas=document.getElementById("page");
+ const ctx=canvas.getContext("2d");
+
+ const viewport=page.getViewport({scale:2});
+
+ canvas.width=viewport.width;
+ canvas.height=viewport.height;
+
+ await page.render({
+   canvasContext:ctx,
+   viewport
+ }).promise;
+
+ document.getElementById("counter").textContent=
+ `Page ${pageNum}/${pdf.numPages}`;
+
+}
+
+prev.onclick=()=>{
+ if(pageNum>1){
+   pageNum--;
+   render();
+ }
+};
+
+next.onclick=()=>{
+ if(pageNum<pdf.numPages){
+   pageNum++;
+   render();
+ }else{
+   location.href=`read.html?id=${id}&ch=${ch+1}`;
+ }
+};
+
+load().catch(e=>{
+ document.querySelector(".card").innerHTML=
+ `<h2>Error</h2><p>${e.message}</p>`;
 });
 </script>
 
