@@ -2,65 +2,266 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FreeNovel Reader</title>
+
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#eef2f3}
-header{background:#00897b;color:#fff;padding:16px;font-size:24px;font-weight:bold}
-header a{color:#fff;text-decoration:none}
-.container{padding:20px}
-.card{background:#fff;border-radius:20px;padding:20px}
-h1{margin-top:0}
-#pdf{width:100%;height:75vh;border:none;border-radius:12px;background:#eee}
-.nav{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}
-.nav button{width:46px;height:46px;border:none;border-radius:50%;background:#00897b;color:#fff;font-size:18px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+font-family:Arial,sans-serif;
+background:#eef2f3;
+color:#111;
+transition:.3s;
+}
+body.dark{
+background:#121212;
+color:#fff;
+}
+header{
+background:#00897b;
+padding:15px;
+display:flex;
+align-items:center;
+gap:12px;
+}
+header a{
+text-decoration:none;
+color:white;
+display:flex;
+align-items:center;
+gap:12px;
+}
+.logo{
+width:42px;
+height:42px;
+}
+header h1{
+font-size:32px;
+font-weight:400;
+}
+
+.container{
+max-width:900px;
+margin:20px auto;
+padding:18px;
+}
+
+.card{
+background:white;
+border-radius:28px;
+padding:20px;
+box-shadow:0 5px 18px rgba(0,0,0,.08);
+}
+body.dark .card{
+background:#1f1f1f;
+}
+
+.cover{
+width:220px;
+max-width:100%;
+display:block;
+margin:auto;
+border-radius:18px;
+}
+
+h2{
+margin:18px 0;
+text-align:center;
+font-size:22px;
+}
+
+#volumeTitle{
+font-size:34px;
+font-weight:bold;
+text-align:left;
+margin-top:15px;
+}
+
+.buttons{
+display:flex;
+gap:12px;
+margin:20px 0;
+flex-wrap:wrap;
+}
+
+.buttons button{
+width:54px;
+height:54px;
+border:none;
+border-radius:50%;
+background:#00897b;
+color:white;
+font-size:22px;
+cursor:pointer;
+}
+
+.controls{
+display:flex;
+justify-content:center;
+gap:18px;
+margin:20px 0;
+}
+
+.controls button{
+width:60px;
+height:60px;
+border:none;
+border-radius:50%;
+background:white;
+font-size:28px;
+cursor:pointer;
+box-shadow:0 4px 12px rgba(0,0,0,.1);
+}
+body.dark .controls button{
+background:#2a2a2a;
+color:white;
+}
+
+.viewer{
+width:100%;
+height:78vh;
+border:none;
+border-radius:18px;
+background:#ddd;
+}
+
+.error{
+text-align:center;
+padding:40px;
+font-size:18px;
+display:none;
+}
+
+.back{
+display:block;
+margin-top:25px;
+padding:16px;
+border-radius:30px;
+background:#00897b;
+color:white;
+text-decoration:none;
+text-align:center;
+font-size:22px;
+}
 </style>
 </head>
 <body>
 
-<header><a href="index.html">📚 FreeNovel</a></header>
+<header>
+<a href="index.html">
+<img src="assets/logo.png" class="logo" onerror="this.style.display='none'">
+<h1>FreeNovel</h1>
+</a>
+</header>
 
 <div class="container">
 <div class="card">
-<h1 id="title">Loading...</h1>
-<h2 id="volume"></h2>
 
-<div class="nav" id="buttons"></div>
+<img id="cover" class="cover">
 
-<iframe id="pdf"></iframe>
+<h2 id="title"></h2>
+
+<div id="volumeTitle">Volume 1</div>
+
+<div class="buttons" id="volumeButtons"></div>
+
+<div class="controls">
+<button onclick="zoom(-10)">A-</button>
+<button onclick="toggleDark()">🌙</button>
+<button onclick="zoom(10)">A+</button>
+</div>
+
+<iframe id="pdfFrame" class="viewer"></iframe>
+
+<div id="error" class="error">
+PDF not found.
+</div>
+
+<a href="index.html" class="back">← Back Home</a>
+
 </div>
 </div>
 
 <script>
 const params=new URLSearchParams(location.search);
 const id=params.get("id");
-let vol=parseInt(params.get("ch"))||0;
+let current=params.get("ch")||0;
 
-fetch(`data/${id}.json`)
-.then(r=>r.json())
-.then(data=>{
-document.getElementById("title").textContent=data.title;
+let zoomLevel=100;
 
-const list=data.chapters||[];
+async function load(){
 
-function loadVolume(i){
-vol=i;
-document.getElementById("volume").textContent=list[i].title;
-document.getElementById("pdf").src=list[i].pdf;
-history.replaceState({}, "", `reader.html?id=${id}&ch=${i}`);
-}
+try{
 
-const buttons=document.getElementById("buttons");
-buttons.innerHTML="";
-list.forEach((v,i)=>{
+const data=await fetch(`data/${id}.json`).then(r=>r.json());
+
+document.title=data.title;
+document.getElementById("title").innerText=data.title;
+document.getElementById("cover").src=data.cover;
+
+const buttons=document.getElementById("volumeButtons");
+
+data.chapters.forEach((c,i)=>{
 const b=document.createElement("button");
-b.textContent=i+1;
-b.onclick=()=>loadVolume(i);
+b.innerText=i+1;
+b.onclick=()=>{
+location.href=`reader.html?id=${id}&ch=${i}`;
+};
 buttons.appendChild(b);
 });
 
-loadVolume(Math.min(vol,list.length-1));
-});
+showPDF(data);
+
+}catch(e){
+document.querySelector(".card").innerHTML=`
+<h2>Novel not found</h2>
+<p>${e.message}</p>
+<a href="index.html" class="back">← Back Home</a>
+`;
+}
+
+}
+
+function showPDF(data){
+
+const chapter=data.chapters[current];
+
+document.getElementById("volumeTitle").innerText=chapter.title;
+
+const frame=document.getElementById("pdfFrame");
+const error=document.getElementById("error");
+
+frame.src=chapter.pdf+"#zoom="+zoomLevel;
+
+frame.onload=()=>{
+frame.style.display="block";
+error.style.display="none";
+};
+
+frame.onerror=()=>{
+frame.style.display="none";
+error.style.display="block";
+};
+
+}
+
+function zoom(v){
+zoomLevel=Math.max(50,Math.min(200,zoomLevel+v));
+const frame=document.getElementById("pdfFrame");
+frame.src=frame.src.split("#")[0]+"#zoom="+zoomLevel;
+}
+
+function toggleDark(){
+document.body.classList.toggle("dark");
+localStorage.setItem("theme",
+document.body.classList.contains("dark")?"dark":"light");
+}
+
+if(localStorage.getItem("theme")==="dark"){
+document.body.classList.add("dark");
+}
+
+load();
 </script>
 
 </body>
