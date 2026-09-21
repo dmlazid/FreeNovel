@@ -1,16 +1,19 @@
+// ===== FreeNovel app.js (Fixed) =====
+
 // Side Menu
 function openMenu() {
-  document.getElementById("sideMenu").style.width = "260px";
+  const menu = document.getElementById("sideMenu");
+  if (menu) menu.style.width = "260px";
 }
 
 function closeMenu() {
-  document.getElementById("sideMenu").style.width = "0";
+  const menu = document.getElementById("sideMenu");
+  if (menu) menu.style.width = "0";
 }
 
 // Dark Mode
 function toggleDark() {
   document.body.classList.toggle("dark");
-
   localStorage.setItem(
     "theme",
     document.body.classList.contains("dark") ? "dark" : "light"
@@ -20,6 +23,17 @@ function toggleDark() {
 if (localStorage.getItem("theme") === "dark") {
   document.body.classList.add("dark");
 }
+
+// Make header/logo go Home
+document.addEventListener("DOMContentLoaded", () => {
+  const header = document.querySelector("header");
+  if (header) {
+    header.style.cursor = "pointer";
+    header.addEventListener("click", () => {
+      location.href = "index.html";
+    });
+  }
+});
 
 // Search
 function searchNovel() {
@@ -32,77 +46,78 @@ function searchNovel() {
   });
 }
 
-// Load Novels
+// Load novels
 fetch("data/novels.json")
   .then(r => r.json())
-  .then(showNovels);
+  .then(showNovels)
+  .catch(console.error);
 
+// Build card
+function createCard(n) {
+  const count = n.chapters || n.volumes || 0;
+
+  return `
+  <div class="card">
+    <img src="${n.cover}"
+         alt="${n.title}"
+         onerror="this.src='https://placehold.co/300x420?text=No+Cover'">
+
+    <div class="info">
+      <h3>${n.title}</h3>
+      <p>${n.author}</p>
+      <p>${n.genre}</p>
+      <p>${count} Volumes · ${n.status}</p>
+      <a class="read" href="novel.html?id=${n.id}">Read Now</a>
+    </div>
+  </div>`;
+}
+
+// Show novels
 function showNovels(novels) {
-
   const latest = document.getElementById("latest");
   const popular = document.getElementById("popular");
   const completed = document.getElementById("completed");
 
+  if (latest) latest.innerHTML = "";
+  if (popular) popular.innerHTML = "";
+  if (completed) completed.innerHTML = "";
+
   novels.forEach(n => {
+    const card = createCard(n);
 
-    const card = `
-  <div class="card">
-    <img src="${n.cover}" alt="${n.title}">
-    <div class="info">
-      <h3>${n.title}</h3>
-      <p>${n.author}</p>
-      <p>${n.genre} • ${n.chapters} Chapters • ${n.status}</p>
-      <a class="read" href="novel.html?id=${n.id}">Read Now</a>
-    </div>
-  </div>
-`;
-    latest.innerHTML += card;
-    popular.innerHTML += card;
+    if (latest) latest.innerHTML += card;
+    if (popular) popular.innerHTML += card;
 
-    if (n.status === "Completed") {
+    if (n.status === "Completed" && completed) {
       completed.innerHTML += card;
     }
   });
 }
-// Filter novels by genre
-function filterGenre(genre){
 
-  const latest=document.getElementById("latest");
-  const popular=document.getElementById("popular");
-  const completed=document.getElementById("completed");
-
-  latest.innerHTML="";
-  popular.innerHTML="";
-  completed.innerHTML="";
-
+// Genre filter
+function filterGenre(genre) {
   fetch("data/novels.json")
-    .then(r=>r.json())
-    .then(novels=>{
+    .then(r => r.json())
+    .then(novels => {
+      const latest = document.getElementById("latest");
+      const popular = document.getElementById("popular");
+      const completed = document.getElementById("completed");
+
+      if (latest) latest.innerHTML = "";
+      if (popular) popular.innerHTML = "";
+      if (completed) completed.innerHTML = "";
 
       novels
-      .filter(n=>n.genre===genre)
-      .forEach(n=>{
+        .filter(n => n.genre.toLowerCase().includes(genre.toLowerCase()))
+        .forEach(n => {
+          const card = createCard(n);
 
-        const card=`
-          <div class="card">
-            <img src="${n.cover}">
-            <div class="info">
-              <h3>${n.title}</h3>
-              <p>${n.author}</p>
-              <p>${n.genre} • ${n.chapters} Chapters • ${n.status}</p>
-              <a class="read" href="novel.html?id=${n.id}">Read Now</a>
-            </div>
-          </div>
-        `;
+          if (latest) latest.innerHTML += card;
+          if (popular) popular.innerHTML += card;
 
-        latest.innerHTML+=card;
-        popular.innerHTML+=card;
-
-        if(n.status==="Completed"){
-          completed.innerHTML+=card;
-        }
-      });
-
+          if (n.status === "Completed" && completed) {
+            completed.innerHTML += card;
+          }
+        });
     });
-
 }
