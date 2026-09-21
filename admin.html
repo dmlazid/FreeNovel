@@ -148,6 +148,19 @@ document.getElementById("fileInput").addEventListener("change", async e => {
 async function uploadFile(token, repo, path, content) {
   const url = `https://api.github.com/repos/${repo}/contents/${path}`;
 
+  let sha = null;
+
+  const old = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json"
+    }
+  });
+
+  if (old.ok) {
+    sha = (await old.json()).sha;
+  }
+
   await fetch(url, {
     method: "PUT",
     headers: {
@@ -156,7 +169,8 @@ async function uploadFile(token, repo, path, content) {
     },
     body: JSON.stringify({
       message: `Upload ${path}`,
-      content: btoa(unescape(encodeURIComponent(content)))
+      content: btoa(unescape(encodeURIComponent(content))),
+      sha
     })
   });
 }
@@ -192,9 +206,9 @@ async function publish() {
     await uploadFile(token, repo, file, chapters[i]);
 
     json.chapters.push({
-      title: `Chapter ${i+1}`,
-      file
-    });
+  title: `Chapter ${i+1}`,
+  file: `chapters/${id}/ch${i+1}.txt`
+});
   }
 
   await uploadFile(
@@ -204,7 +218,30 @@ async function publish() {
   JSON.stringify(json, null, 2)
 );
 
-alert("Novel uploaded! Now add it to data/novels.json.");
+// Download current novels.json
+const res = await fetch("data/novels.json");
+const novels = await res.json();
+
+// Add new novel
+novels.push({
+  id,
+  title,
+  author,
+  cover,
+  chapters: chapters.length,
+  status: "Ongoing",
+  genre
+});
+
+// Upload updated novels.json
+await uploadFile(
+  token,
+  repo,
+  "data/novels.json",
+  JSON.stringify(novels, null, 2)
+);
+
+alert("Novel published successfully!");
 }
 
 </script>
