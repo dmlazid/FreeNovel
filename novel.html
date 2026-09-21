@@ -106,7 +106,7 @@ document.getElementById("novel").innerHTML=`
 <div class="volumes">
 
 ${data.chapters.map((v,i)=>`
-<a class="btn" href="read.html?id=${id}&ch=${i}">
+<a class="btn" href="read.html?id=${id}&ch=${i+1}">
 ${v.title}
 </a>
 `).join("")}
