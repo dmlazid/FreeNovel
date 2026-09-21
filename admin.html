@@ -231,12 +231,6 @@ async function publish() {
   `data/${id}.json`,
   JSON.stringify(json, null, 2)
 );
-await uploadFile(
-  token,
-  repo,
-  `pdfs/${id}.pdf`,
-  await pdfFile.arrayBuffer()
-);
 
 if (coverFile) {
   await uploadFile(
