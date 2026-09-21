@@ -1,115 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Convert PDF</title>
+<title>FreeNovel Converter</title>
 
 <style>
 body{
-font-family:system-ui;
-padding:30px;
-background:#f3f3f3;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:#f3f3f3;
+  padding:25px;
 }
-button,input{
-font-size:20px;
-margin-top:15px;
+.card{
+  max-width:700px;
+  margin:auto;
+  background:white;
+  border-radius:16px;
+  padding:24px;
 }
-pre{
-white-space:pre-wrap;
-background:white;
-padding:20px;
-border-radius:10px;
-max-height:300px;
-overflow:auto;
+h1{
+  color:#00897b;
+  text-align:center;
+}
+button{
+  width:100%;
+  padding:16px;
+  font-size:20px;
+  border:none;
+  border-radius:10px;
+  background:#00897b;
+  color:white;
+  cursor:pointer;
+}
+#log{
+  margin-top:20px;
+  background:#f7f7f7;
+  padding:15px;
+  border-radius:10px;
+  white-space:pre-wrap;
+  font-size:15px;
 }
 </style>
 </head>
 <body>
 
-<h1>PDF → JSON Converter</h1>
+<div class="card">
 
-<p>Select a PDF.</p>
+<h1>📚 Convert All PDFs</h1>
 
-<input type="file" id="file" accept=".pdf">
+<p>This converts every PDF into JSON chapter files automatically.</p>
 
-<p>Volume number:</p>
+<button onclick="convertAll()">Convert All</button>
 
-<input type="number" id="volume" value="1" min="1">
+<div id="log">Ready.</div>
 
-<br><br>
-
-<button onclick="convert()">Convert</button>
-
-<pre id="status"></pre>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
-
-pdfjsLib.GlobalWorkerOptions.workerSrc=
+pdfjsLib.GlobalWorkerOptions.workerSrc =
 "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-async function convert(){
+const bookId="new-life-young-again";
 
-const file=document.getElementById("file").files[0];
+const volumes=[
+  {title:"Volume 1",pdf:"pdfs/new-life-young-again-v1.pdf"},
+  {title:"Volume 2",pdf:"pdfs/new-life-young-again-v2.pdf"},
+  {title:"Volume 3",pdf:"pdfs/new-life-young-again-v3.pdf"}
+];
 
-if(!file)return;
+const log=document.getElementById("log");
 
-const vol=document.getElementById("volume").value;
+function write(msg){
+  log.textContent+=`\n${msg}`;
+}
 
-const bytes=await file.arrayBuffer();
+async function convertVolume(vol,index){
 
-const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+  write(`Converting ${vol.title}...`);
 
-let text="";
+  const pdf=await pdfjsLib.getDocument(vol.pdf).promise;
 
-for(let p=1;p<=pdf.numPages;p++){
+  let text="";
 
-const page=await pdf.getPage(p);
+  for(let p=1;p<=pdf.numPages;p++){
 
-const t=await page.getTextContent();
+    const page=await pdf.getPage(p);
+    const tc=await page.getTextContent();
 
-let lastY=null;
+    let lastY=null;
 
-t.items.forEach(i=>{
+    tc.items.forEach(item=>{
 
-const y=i.transform[5];
+      const y=item.transform[5];
 
-if(lastY!==null&&Math.abs(y-lastY)>8)
-text+="\n";
+      if(lastY!==null && Math.abs(y-lastY)>8)
+        text+="\n";
 
-text+=i.str+" ";
+      text+=item.str+" ";
 
-lastY=y;
+      lastY=y;
 
-});
+    });
 
-text+="\n\n";
+    text+="\n\n";
+  }
+
+  text=text
+    .replace(/Table of Contents[\s\S]*?Prologue:/i,"Prologue:")
+    .replace(/Cover/gi,"")
+    .replace(/Color Illustrations/gi,"")
+    .trim();
+
+  const json={
+    title:vol.title,
+    text:text
+  };
+
+  const blob=new Blob(
+    [JSON.stringify(json,null,2)],
+    {type:"application/json"}
+  );
+
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`v${index+1}.json`;
+  a.click();
+
+  await new Promise(r=>setTimeout(r,600));
+
+  write(`✓ Downloaded v${index+1}.json`);
 
 }
 
-text=text
-.replace(/Table of Contents[\s\S]*?Prologue:/i,"Prologue:")
-.replace(/Cover/gi,"")
-.replace(/Color Illustrations/gi,"");
+async function convertAll(){
 
-const json={
-title:`Volume ${vol}`,
-text:text.trim()
-};
+  log.textContent="Starting conversion...\n";
 
-const blob=new Blob([JSON.stringify(json,null,2)],{type:"application/json"});
+  for(let i=0;i<volumes.length;i++){
 
-const a=document.createElement("a");
+    try{
+      await convertVolume(volumes[i],i);
+    }catch(e){
+      write(`❌ Failed: ${volumes[i].title}`);
+      write(e.message);
+    }
 
-a.href=URL.createObjectURL(blob);
+  }
 
-a.download=`v${vol}.json`;
-
-a.click();
-
-status.textContent="Done! Upload "+`v${vol}.json`+" into chapters/new-life-young-again/";
+  write("\nDone!");
+  write("Upload the downloaded files into:");
+  write(`chapters/${bookId}/`);
 
 }
 </script>
