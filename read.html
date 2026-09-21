@@ -2,168 +2,137 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FreeNovel Reader</title>
 
 <style>
 body{
-margin:0;
-background:#eef2f2;
-font-family:Arial,sans-serif;
+  margin:0;
+  background:#dfe5e5;
+  font-family:Arial,sans-serif;
 }
 header{
-background:#00897b;
-padding:18px;
+  background:#00897b;
+  color:#fff;
+  padding:20px;
+  font-size:38px;
 }
-header a{
-color:#fff;
-font-size:28px;
-text-decoration:none;
-font-weight:bold;
-}
-.container{
-max-width:900px;
-margin:20px auto;
-padding:15px;
-}
+header a{color:white;text-decoration:none;}
+
 .card{
-background:#fff;
-border-radius:25px;
-padding:20px;
-text-align:center;
-box-shadow:0 8px 20px rgba(0,0,0,.1);
+  background:white;
+  margin:20px;
+  border-radius:28px;
+  padding:20px;
+  text-align:center;
 }
-#title{
-font-size:30px;
-margin-bottom:20px;
+
+#pdfCanvas{
+  width:100%;
+  height:auto;
+  border-radius:12px;
 }
-#viewer img{
-width:100%;
-border-radius:15px;
-display:block;
-margin-bottom:15px;
-}
+
 .controls{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-top:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:20px;
 }
+
 button{
-background:#00897b;
-color:white;
-border:none;
-padding:14px 22px;
-border-radius:30px;
-font-size:18px;
-cursor:pointer;
-}
-button:disabled{
-opacity:.4;
+  background:#00897b;
+  color:white;
+  border:none;
+  border-radius:30px;
+  padding:14px 26px;
+  font-size:20px;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-<a href="index.html">📚 FreeNovel</a>
-</header>
+<header><a href="index.html">📚 FreeNovel</a></header>
 
-<div class="container">
 <div class="card">
 
 <h1 id="title">Loading...</h1>
 
-<div id="viewer"></div>
+<canvas id="pdfCanvas"></canvas>
 
 <div class="controls">
 <button id="prev">◀ Prev</button>
-<span id="pageText">Page 1</span>
+<div id="pageInfo">Page 1 / 1</div>
 <button id="next">Next ▶</button>
 </div>
 
 </div>
-</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
 const params=new URLSearchParams(location.search);
 const id=params.get("id");
-const volume=parseInt(params.get("ch"))||1;
-
-document.getElementById("title").textContent=id.replace(/-/g," ")+" — Volume "+volume;
-
-const pdf=`pdfs/${id}-v${volume}.pdf`;
+const ch=parseInt(params.get("ch")||"1");
 
 let pdfDoc=null;
-let page=1;
+let pageNum=1;
 
-pdfjsLib.GlobalWorkerOptions.workerSrc=
-"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+async function renderPage(num){
+ const page=await pdfDoc.getPage(num);
+ const viewport=page.getViewport({scale:1.8});
 
-async function loadPDF(){
+ const canvas=document.getElementById("pdfCanvas");
+ const ctx=canvas.getContext("2d");
 
-try{
+ canvas.width=viewport.width;
+ canvas.height=viewport.height;
 
-pdfDoc=await pdfjsLib.getDocument(pdf).promise;
-showPage(1);
+ await page.render({canvasContext:ctx,viewport}).promise;
 
-}catch(e){
+ document.getElementById("pageInfo").textContent=
+ `Page ${num} / ${pdfDoc.numPages}`;
 
-document.querySelector(".card").innerHTML=`
-<h1>PDF not found</h1>
-<p>${pdf}</p>
-<a href="index.html">Back Home</a>`;
+ document.getElementById("prev").disabled=num<=1;
+ document.getElementById("next").disabled=num>=pdfDoc.numPages;
 }
 
+async function load(){
+
+ const data=await fetch(`data/${id}.json`).then(r=>r.json());
+
+ const chapter=data.chapters[ch-1];
+
+ document.getElementById("title").textContent=
+ `${data.title} — ${chapter.title}`;
+
+ pdfjsLib.GlobalWorkerOptions.workerSrc=
+ "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+ pdfDoc=await pdfjsLib.getDocument(chapter.pdf).promise;
+
+ renderPage(1);
+
+ document.getElementById("prev").onclick=()=>{
+  if(pageNum>1){
+   pageNum--;
+   renderPage(pageNum);
+  }
+ };
+
+ document.getElementById("next").onclick=()=>{
+  if(pageNum<pdfDoc.numPages){
+   pageNum++;
+   renderPage(pageNum);
+  }
+ };
 }
 
-async function showPage(num){
-
-page=num;
-
-const p=await pdfDoc.getPage(num);
-
-const viewport=p.getViewport({scale:1.8});
-
-const canvas=document.createElement("canvas");
-const ctx=canvas.getContext("2d");
-
-canvas.width=viewport.width;
-canvas.height=viewport.height;
-
-await p.render({
-canvasContext:ctx,
-viewport
-}).promise;
-
-const viewer=document.getElementById("viewer");
-viewer.innerHTML="";
-viewer.appendChild(canvas);
-
-document.getElementById("pageText").textContent=
-`Page ${page} / ${pdfDoc.numPages}`;
-
-document.getElementById("prev").disabled=page===1;
-document.getElementById("next").disabled=page===pdfDoc.numPages;
-
-window.scrollTo({top:0,behavior:"smooth"});
-}
-
-document.getElementById("prev").onclick=()=>{
-if(page>1)showPage(page-1);
-};
-
-document.getElementById("next").onclick=()=>{
-if(page<pdfDoc.numPages)showPage(page+1);
-};
-
-const s=document.createElement("script");
-s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
-s.type="module";
-s.onload=loadPDF;
-document.head.appendChild(s);
-
+load().catch(e=>{
+ document.querySelector(".card").innerHTML=
+ `<h2>Error</h2><p>${e.message}</p>`;
+});
 </script>
 
 </body>
