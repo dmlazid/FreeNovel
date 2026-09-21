@@ -2,10 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FreeNovel Admin</title>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.worker.min.js";
+</script>
 
 <style>
 body{
@@ -15,28 +20,45 @@ padding:20px;
 max-width:700px;
 margin:auto;
 }
-input,button{
+h2{
+font-size:42px;
+margin-bottom:20px;
+}
+input,textarea{
 width:100%;
 padding:14px;
 margin:8px 0;
-border-radius:10px;
 border:1px solid #ccc;
+border-radius:12px;
 box-sizing:border-box;
+font-size:16px;
 }
 button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:14px;
 background:#00897B;
 color:white;
-border:none;
 font-size:18px;
+font-weight:bold;
+margin-top:12px;
 cursor:pointer;
 }
-button:hover{
-background:#00796B;
+button:disabled{
+opacity:.6;
+cursor:not-allowed;
 }
 label{
-font-weight:bold;
 display:block;
-margin-top:15px;
+font-size:28px;
+margin-top:14px;
+margin-bottom:6px;
+}
+#status{
+margin-top:16px;
+white-space:pre-wrap;
+font-size:15px;
 }
 </style>
 </head>
@@ -46,30 +68,40 @@ margin-top:15px;
 <h2>📚 Upload Novel</h2>
 
 <input id="title" placeholder="Novel title">
+
 <input id="author" placeholder="Author">
+
 <input id="genre" placeholder="Genre">
 
 <label>Cover Image</label>
 <input id="coverFile" type="file" accept="image/*">
 
 <label>Novel PDFs (Select as many as you want)</label>
-<input id="pdfInput" type="file" accept=".pdf,application/pdf" multiple>
+<input id="pdfInput" type="file" accept="application/pdf,.pdf" multiple>
 
 <input id="token" type="password" placeholder="GitHub Personal Access Token">
+
 <input id="repo" value="dmlazid/FreeNovel">
+
 <input id="branch" value="main">
 
-<button onclick="publish()">🚀 Publish to GitHub</button>
+<button id="publishBtn" onclick="publishNovel()">🚀 Publish to GitHub</button>
+
+<div id="status"></div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.worker.min.js";
 
-async function uploadFile(token, repo, branch, path, content){
+const statusBox=document.getElementById("status");
+
+function log(msg){
+statusBox.textContent+=msg+"\n";
+}
+
+async function uploadFile(token,repo,path,content){
 
 const url=`https://api.github.com/repos/${repo}/contents/${path}`;
 
-let sha=null;
+let sha;
 
 const old=await fetch(url,{
 headers:{
@@ -82,33 +114,32 @@ if(old.ok){
 sha=(await old.json()).sha;
 }
 
-const bytes=content instanceof Uint8Array?content:new Uint8Array(content);
+const bytes=content instanceof Uint8Array
+?content
+:new Uint8Array(content);
 
-const binary=Array.from(bytes,x=>String.fromCharCode(x)).join("");
-
-const body={
-message:`Upload ${path}`,
-content:btoa(binary)
-};
-
-if(sha) body.sha=sha;
-
-const res=await fetch(url,{
+await fetch(url,{
 method:"PUT",
 headers:{
 Authorization:`Bearer ${token}`,
 Accept:"application/vnd.github+json"
 },
-body:JSON.stringify(body)
+body:JSON.stringify({
+message:`Upload ${path}`,
+content:btoa(String.fromCharCode(...bytes)),
+sha
+})
 });
 
-if(!res.ok){
-const err=await res.text();
-throw new Error(err);
-}
 }
 
-async function publish(){
+async function publishNovel(){
+
+const btn=document.getElementById("publishBtn");
+
+btn.disabled=true;
+
+statusBox.textContent="";
 
 try{
 
@@ -120,33 +151,38 @@ const title=document.getElementById("title").value.trim();
 const author=document.getElementById("author").value.trim();
 const genre=document.getElementById("genre").value.trim();
 
-if(!token) return alert("Enter GitHub token.");
-if(!title) return alert("Enter title.");
+if(!title)throw"Title required.";
+if(!token)throw"GitHub token required.";
 
-const id=title.toLowerCase().replace(/[^a-z0-9]+/g,"-");
-
-const coverFile=document.getElementById("coverFile").files[0];
 const pdfFiles=Array.from(document.getElementById("pdfInput").files);
 
-if(pdfFiles.length===0){
-return alert("Choose one or more PDFs.");
-}
+if(pdfFiles.length===0)throw"Choose one or more PDFs.";
+
+const id=title.toLowerCase()
+.replace(/[^a-z0-9]+/g,"-")
+.replace(/^-|-$/g,"");
+
+const coverFile=document.getElementById("coverFile").files[0];
+const cover=coverFile?`covers/${id}.jpg`:"";
 
 let raw="";
 
+log(`Found ${pdfFiles.length} PDF(s)`);
+
 for(const pdfFile of pdfFiles){
 
-const pdf=await pdfjsLib.getDocument({
-data:await pdfFile.arrayBuffer()
-}).promise;
+log(`Uploading ${pdfFile.name}`);
 
 await uploadFile(
 token,
 repo,
-branch,
 `pdfs/${pdfFile.name}`,
 await pdfFile.arrayBuffer()
 );
+
+const pdf=await pdfjsLib.getDocument({
+data:await pdfFile.arrayBuffer()
+}).promise;
 
 for(let p=1;p<=pdf.numPages;p++){
 
@@ -160,14 +196,20 @@ raw+=text.items.map(i=>i.str).join(" ")+"\n";
 
 }
 
-const chapters=raw
+let chapters=raw
 .split(/(?=Chapter\s+\d+)/i)
 .filter(x=>x.trim());
+
+if(chapters.length===0){
+
+chapters=[raw];
+
+}
 
 const json={
 title,
 author,
-cover:coverFile?`covers/${id}.jpg`:"",
+cover,
 description:"",
 chapters:[]
 };
@@ -179,7 +221,6 @@ const file=`chapters/${id}/ch${i+1}.txt`;
 await uploadFile(
 token,
 repo,
-branch,
 file,
 new TextEncoder().encode(chapters[i])
 );
@@ -189,23 +230,27 @@ title:`Chapter ${i+1}`,
 file
 });
 
+log(`Uploaded Chapter ${i+1}`);
+
 }
 
 await uploadFile(
 token,
 repo,
-branch,
 `data/${id}.json`,
-new TextEncoder().encode(JSON.stringify(json,null,2))
+new TextEncoder().encode(
+JSON.stringify(json,null,2)
+)
 );
 
 if(coverFile){
 
+log("Uploading cover");
+
 await uploadFile(
 token,
 repo,
-branch,
-`covers/${id}.jpg`,
+cover,
 await coverFile.arrayBuffer()
 );
 
@@ -213,11 +258,19 @@ await coverFile.arrayBuffer()
 
 let novels=[];
 
-const res=await fetch("data/novels.json");
+try{
+
+const res=await fetch(
+`https://raw.githubusercontent.com/${repo}/${branch}/data/novels.json`
+);
 
 if(res.ok){
+
 novels=await res.json();
+
 }
+
+}catch(e){}
 
 novels=novels.filter(n=>n.id!==id);
 
@@ -225,30 +278,33 @@ novels.push({
 id,
 title,
 author,
-cover:coverFile?`covers/${id}.jpg`:"",
-chapters:chapters.length,
+cover,
+genre,
 status:"Ongoing",
-genre
+chapters:chapters.length
 });
 
 await uploadFile(
 token,
 repo,
-branch,
 "data/novels.json",
-new TextEncoder().encode(JSON.stringify(novels,null,2))
+new TextEncoder().encode(
+JSON.stringify(novels,null,2)
+)
 );
 
 alert("Novel published successfully!");
 
-}catch(e){
+}catch(err){
 
-console.error(e);
-alert(e.message);
+alert(err);
+
+}
+
+btn.disabled=false;
 
 }
 
-}
 </script>
 
 </body>
