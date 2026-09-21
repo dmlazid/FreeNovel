@@ -2,55 +2,125 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FreeNovel</title>
+
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#eef2f3}
-header{background:#00897b;padding:16px}
-header a{color:#fff;text-decoration:none;font-size:32px;font-weight:bold;display:flex;align-items:center;gap:10px}
-.container{padding:20px}
-.card{background:#fff;border-radius:24px;padding:20px;text-align:center}
-.cover{width:220px;border-radius:14px;margin:auto;display:block}
-.btn{display:block;background:#00897b;color:#fff;text-decoration:none;padding:16px;border-radius:30px;margin:12px 0;font-size:20px}
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#eef2f3;
+}
+
+header{
+background:#00897b;
+padding:15px;
+}
+
+header a{
+color:#fff;
+text-decoration:none;
+font-size:32px;
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.logo{
+width:42px;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:#fff;
+padding:20px;
+border-radius:25px;
+text-align:center;
+}
+
+.cover{
+width:240px;
+max-width:100%;
+border-radius:20px;
+}
+
+.volumes{
+display:flex;
+flex-direction:column;
+gap:15px;
+margin-top:30px;
+}
+
+.btn{
+display:block;
+padding:18px;
+background:#00897b;
+color:#fff;
+text-decoration:none;
+border-radius:35px;
+font-size:22px;
+font-weight:bold;
+}
 </style>
 </head>
+
 <body>
 
 <header>
-  <a href="index.html">📚 FreeNovel</a>
+<a href="index.html">
+<img src="assets/logo.png" class="logo">
+FreeNovel
+</a>
 </header>
 
 <div class="container">
-  <div class="card" id="novel">Loading...</div>
+<div class="card" id="novel">
+
+Loading...
+
+</div>
 </div>
 
 <script>
-const id=new URLSearchParams(location.search).get("id");
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
 
-fetch(`data/${id}.json`)
-.then(r=>{
-  if(!r.ok) throw new Error("JSON not found");
-  return r.json();
-})
-.then(data=>{
-  document.getElementById("novel").innerHTML=`
-    <img class="cover" src="${data.cover}" onerror="this.src='https://placehold.co/300x420?text=No+Cover'">
-    <h1>${data.title}</h1>
-    <p><b>${data.author}</b></p>
-    <p>${data.genre}</p>
-    <p>${data.chapters.length} Volumes · Ongoing</p>
-    <h2>Volumes</h2>
-    ${data.chapters.map((v,i)=>`
-      <a class="btn" href="reader.html?id=${id}&ch=${i}">${v.title}</a>
-    `).join("")}
-  `;
-})
-.catch(e=>{
-  document.getElementById("novel").innerHTML=`
-    <h2>Novel not found</h2>
-    <p>${e.message}</p>
-    <a class="btn" href="index.html">⬅ Back Home</a>
-  `;
+async function load(){
+
+const data = await fetch(`data/${id}.json`).then(r=>r.json());
+
+document.getElementById("novel").innerHTML=`
+<img class="cover" src="${data.cover}">
+<h1>${data.title}</h1>
+<p>${data.author}</p>
+<p>${data.genre}</p>
+<p>${data.chapters.length} Volumes · Ongoing</p>
+
+<h2>Volumes</h2>
+
+<div class="volumes">
+
+${data.chapters.map((v,i)=>`
+<a class="btn" href="read.html?id=${id}&ch=${i}">
+${v.title}
+</a>
+`).join("")}
+
+</div>
+`;
+
+}
+
+load().catch(()=>{
+document.getElementById("novel").innerHTML=`
+<h2>Novel not found</h2>
+<a class="btn" href="index.html">← Back Home</a>
+`;
 });
 </script>
 
