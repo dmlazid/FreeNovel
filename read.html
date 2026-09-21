@@ -6,84 +6,21 @@
 <title>FreeNovel Reader</title>
 
 <style>
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:#eef2f3;
-}
-header{
-  background:#00897b;
-  padding:15px;
-}
-header a{
-  color:#fff;
-  text-decoration:none;
-  font-size:32px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.logo{
-  width:42px;
-}
-
-.container{
-  max-width:900px;
-  margin:auto;
-  padding:15px;
-}
-
-.card{
-  background:#fff;
-  border-radius:25px;
-  padding:20px;
-}
-
-.cover{
-  width:220px;
-  border-radius:16px;
-  display:block;
-  margin:auto;
-}
-
-h1{
-  text-align:center;
-}
-
-.buttons{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  flex-wrap:wrap;
-  margin:20px 0;
-}
-
-.buttons button{
-  width:55px;
-  height:55px;
-  border:none;
-  border-radius:50%;
-  background:#00897b;
-  color:#fff;
-  font-size:20px;
-  cursor:pointer;
-}
-
-.buttons button.active{
-  background:#00695c;
-}
-
-#viewer{
-  width:100%;
-  height:90vh;
-  border:none;
-  border-radius:16px;
-  background:#ddd;
-}
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f3}
+header{background:#00897b;padding:15px}
+header a{color:white;text-decoration:none;font-size:30px;display:flex;align-items:center;gap:10px}
+.logo{width:42px}
+.container{max-width:900px;margin:auto;padding:15px}
+.card{background:white;border-radius:20px;padding:20px}
+#pdf-canvas{width:100%;height:auto;border-radius:12px;background:white}
+.controls{display:flex;justify-content:space-between;align-items:center;margin:15px 0;gap:10px}
+button{background:#00897b;color:white;border:none;padding:12px 18px;border-radius:12px;font-size:16px}
+button:disabled{opacity:.5}
+.volumes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:15px}
+.volumes button{width:50px;height:50px;border-radius:50%;padding:0}
+h1{text-align:center}
 </style>
 </head>
-
 <body>
 
 <header>
@@ -96,64 +33,93 @@ FreeNovel
 <div class="container">
 <div class="card">
 
-<img id="cover" class="cover">
+<h1 id="title">Loading...</h1>
 
-<h1 id="title"></h1>
+<div id="volumeButtons" class="volumes"></div>
 
-<div id="volumes" class="buttons"></div>
+<div class="controls">
+<button id="prev">◀ Prev</button>
+<span id="pageInfo">Page 1</span>
+<button id="next">Next ▶</button>
+</div>
 
-<iframe id="viewer"></iframe>
+<canvas id="pdf-canvas"></canvas>
 
 </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js"></script>
 
 <script>
-const params = new URLSearchParams(location.search);
-const id = params.get("id");
-const current = Number(params.get("ch") || 0);
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js";
 
-async function load(){
+const params=new URLSearchParams(location.search);
+const id=params.get("id");
+let volume=parseInt(params.get("ch")||0);
 
-const data = await fetch(`data/${id}.json`).then(r=>r.json());
+let pdfDoc=null;
+let pageNum=1;
+const canvas=document.getElementById("pdf-canvas");
+const ctx=canvas.getContext("2d");
 
-document.getElementById("cover").src = data.cover;
-document.getElementById("title").innerText = data.title;
+async function loadNovel(){
 
-const holder = document.getElementById("volumes");
+const novel=await fetch(`data/${id}.json`).then(r=>r.json());
+
+document.getElementById("title").textContent=novel.title;
+
+const holder=document.getElementById("volumeButtons");
 holder.innerHTML="";
 
-data.chapters.forEach((v,i)=>{
-
-const btn=document.createElement("button");
-btn.textContent=i+1;
-
-if(i===current) btn.classList.add("active");
-
-btn.onclick=()=>{
-location.href=`read.html?id=${id}&ch=${i}`;
-};
-
-holder.appendChild(btn);
-
+novel.chapters.forEach((v,i)=>{
+const b=document.createElement("button");
+b.textContent=i+1;
+if(i===volume)b.style.background="#00695c";
+b.onclick=()=>location.href=`read.html?id=${id}&ch=${i}`;
+holder.appendChild(b);
 });
 
-document.getElementById("viewer").src =
-data.chapters[current].pdf + "#toolbar=0&navpanes=0&scrollbar=1";
+pdfDoc=await pdfjsLib.getDocument(novel.chapters[volume].pdf).promise;
+
+pageNum=1;
+renderPage();
 
 }
 
-load().catch(()=>{
-document.querySelector(".card").innerHTML=`
-<h2>Novel not found</h2>
-<a href="index.html" style="
-display:block;
-margin-top:20px;
-padding:16px;
-background:#00897b;
-color:white;
-text-align:center;
-text-decoration:none;
-border-radius:30px;">← Back Home</a>`;
+async function renderPage(){
+
+const page=await pdfDoc.getPage(pageNum);
+
+const viewport=page.getViewport({scale:1.5});
+
+canvas.width=viewport.width;
+canvas.height=viewport.height;
+
+await page.render({
+canvasContext:ctx,
+viewport
+}).promise;
+
+document.getElementById("pageInfo").textContent=
+`Page ${pageNum} / ${pdfDoc.numPages}`;
+
+document.getElementById("prev").disabled=pageNum===1;
+document.getElementById("next").disabled=pageNum===pdfDoc.numPages;
+
+}
+
+document.getElementById("prev").onclick=()=>{
+if(pageNum>1){pageNum--;renderPage();}
+};
+
+document.getElementById("next").onclick=()=>{
+if(pageNum<pdfDoc.numPages){pageNum++;renderPage();}
+};
+
+loadNovel().catch(()=>{
+document.querySelector(".card").innerHTML=
+'<h2>Novel not found</h2><a href="index.html">Back Home</a>';
 });
 </script>
 
