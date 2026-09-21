@@ -2,122 +2,168 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FreeNovel Reader</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
 <style>
-body{margin:0;background:#eef2f2;font-family:Arial}
-header{background:#00897b;color:#fff;padding:20px;font-size:32px}
-.container{padding:15px}
-canvas{
-width:100%;
-height:auto;
-border-radius:15px;
-background:white;
-box-shadow:0 5px 15px rgba(0,0,0,.15)
+body{
+margin:0;
+background:#eef2f2;
+font-family:Arial,sans-serif;
 }
-.pages{
-display:flex;
-flex-wrap:wrap;
-gap:8px;
-justify-content:center;
-margin:15px 0;
-}
-.pages button{
-width:45px;
-height:45px;
-border:none;
-border-radius:50%;
+header{
 background:#00897b;
-color:white;
-font-size:18px;
+padding:18px;
 }
-.pages button.active{background:#004d40}
-.back{
-display:block;
-text-align:center;
-margin-top:20px;
-padding:15px;
-background:#00897b;
-color:white;
+header a{
+color:#fff;
+font-size:28px;
 text-decoration:none;
-border-radius:999px;
-font-size:22px;
+font-weight:bold;
+}
+.container{
+max-width:900px;
+margin:20px auto;
+padding:15px;
+}
+.card{
+background:#fff;
+border-radius:25px;
+padding:20px;
+text-align:center;
+box-shadow:0 8px 20px rgba(0,0,0,.1);
+}
+#title{
+font-size:30px;
+margin-bottom:20px;
+}
+#viewer img{
+width:100%;
+border-radius:15px;
+display:block;
+margin-bottom:15px;
+}
+.controls{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:15px;
+}
+button{
+background:#00897b;
+color:white;
+border:none;
+padding:14px 22px;
+border-radius:30px;
+font-size:18px;
+cursor:pointer;
+}
+button:disabled{
+opacity:.4;
 }
 </style>
 </head>
 
 <body>
 
-<header>FreeNovel</header>
+<header>
+<a href="index.html">📚 FreeNovel</a>
+</header>
 
 <div class="container">
+<div class="card">
 
-<canvas id="pdf"></canvas>
+<h1 id="title">Loading...</h1>
 
-<div id="buttons" class="pages"></div>
+<div id="viewer"></div>
 
-<a class="back" href="index.html">← Back Home</a>
+<div class="controls">
+<button id="prev">◀ Prev</button>
+<span id="pageText">Page 1</span>
+<button id="next">Next ▶</button>
+</div>
 
+</div>
 </div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
 const params=new URLSearchParams(location.search);
 const id=params.get("id");
-const ch=params.get("ch")||1;
+const volume=parseInt(params.get("ch"))||1;
 
-const pdfFile=`pdfs/${id}-v${ch}.pdf`;
+document.getElementById("title").textContent=id.replace(/-/g," ")+" — Volume "+volume;
 
-let pdfDoc;
-let current=1;
-const canvas=document.getElementById("pdf");
+const pdf=`pdfs/${id}-v${volume}.pdf`;
+
+let pdfDoc=null;
+let page=1;
+
+pdfjsLib.GlobalWorkerOptions.workerSrc=
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+
+async function loadPDF(){
+
+try{
+
+pdfDoc=await pdfjsLib.getDocument(pdf).promise;
+showPage(1);
+
+}catch(e){
+
+document.querySelector(".card").innerHTML=`
+<h1>PDF not found</h1>
+<p>${pdf}</p>
+<a href="index.html">Back Home</a>`;
+}
+
+}
+
+async function showPage(num){
+
+page=num;
+
+const p=await pdfDoc.getPage(num);
+
+const viewport=p.getViewport({scale:1.8});
+
+const canvas=document.createElement("canvas");
 const ctx=canvas.getContext("2d");
-
-async function render(pageNum){
-const page=await pdfDoc.getPage(pageNum);
-const viewport=page.getViewport({scale:1.5});
 
 canvas.width=viewport.width;
 canvas.height=viewport.height;
 
-await page.render({canvasContext:ctx,viewport}).promise;
+await p.render({
+canvasContext:ctx,
+viewport
+}).promise;
 
-document.querySelectorAll(".pages button").forEach((b,i)=>{
-b.classList.toggle("active",i+1===pageNum);
-});
+const viewer=document.getElementById("viewer");
+viewer.innerHTML="";
+viewer.appendChild(canvas);
+
+document.getElementById("pageText").textContent=
+`Page ${page} / ${pdfDoc.numPages}`;
+
+document.getElementById("prev").disabled=page===1;
+document.getElementById("next").disabled=page===pdfDoc.numPages;
+
+window.scrollTo({top:0,behavior:"smooth"});
 }
 
-pdfjsLib.getDocument(pdfFile).promise.then(pdf=>{
-pdfDoc=pdf;
-
-const wrap=document.getElementById("buttons");
-
-for(let i=1;i<=pdf.numPages;i++){
-const btn=document.createElement("button");
-btn.textContent=i;
-btn.onclick=()=>{
-current=i;
-render(i);
+document.getElementById("prev").onclick=()=>{
+if(page>1)showPage(page-1);
 };
-wrap.appendChild(btn);
-}
 
-render(1);
+document.getElementById("next").onclick=()=>{
+if(page<pdfDoc.numPages)showPage(page+1);
+};
 
-}).catch(()=>{
-document.body.innerHTML=`
-<header>FreeNovel</header>
-<div style="padding:20px;text-align:center">
-<h2>PDF not found</h2>
-<p>${pdfFile}</p>
-<a href="index.html">Back Home</a>
-</div>`;
-});
+const s=document.createElement("script");
+s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
+s.type="module";
+s.onload=loadPDF;
+document.head.appendChild(s);
+
 </script>
 
 </body>
