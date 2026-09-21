@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FreeNovel Reader</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#e7eceb;font-family:Poppins,sans-serif;color:#222}
-header{background:#00897b;padding:18px;position:sticky;top:0;z-index:100}
+body{font-family:Poppins,sans-serif;background:#dfe5e4;color:#222}
+header{background:#00897b;padding:18px}
 .logo{height:52px}
 .container{max-width:760px;margin:auto;padding:18px}
-h1{text-align:center;color:#00897b;font-size:30px;font-weight:700;margin:18px 0 8px}
-.subtitle{text-align:center;color:#666;font-size:20px;margin-bottom:20px}
+h1{text-align:center;color:#00897b;font-size:32px;font-weight:700;margin:22px 0 6px}
+.subtitle{text-align:center;color:#666;font-size:22px;margin-bottom:18px}
 .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
-select{width:100%;padding:13px;border:none;border-radius:12px;background:#00897b;color:white;font:16px Poppins}
-.reader{background:white;border-radius:22px;padding:26px;box-shadow:0 6px 16px rgba(0,0,0,.08)}
-#chapterTitle{font-size:28px;font-weight:700;line-height:1.35;margin-bottom:18px}
-#content{font-size:18px;line-height:2;white-space:pre-wrap}
-.nav{display:flex;gap:12px;margin-top:28px}
-button{flex:1;padding:15px;border:none;border-radius:12px;background:#00897b;color:white;font:600 17px Poppins}
-button:disabled{opacity:.4}
+select{width:100%;padding:14px;border:none;border-radius:12px;background:#00897b;color:#fff;font:16px Poppins}
+.reader{background:#fff;border-radius:24px;padding:26px}
+#chapterTitle{font-size:30px;font-weight:700;margin-bottom:18px}
+#content{white-space:pre-wrap;line-height:2;font-size:18px}
+.nav{display:flex;gap:12px;margin-top:24px}
+button{flex:1;padding:15px;border:none;border-radius:12px;background:#00897b;color:#fff;font:600 17px Poppins}
+button:disabled{opacity:.45}
 </style>
 </head>
 <body>
@@ -36,7 +36,7 @@ button:disabled{opacity:.4}
 <div class="container">
 
 <h1>[New Life+] Young Again in Another World</h1>
-<div class="subtitle" id="volumeTitle">Volume 1</div>
+<div class="subtitle" id="volTitle"></div>
 
 <div class="controls">
 
@@ -55,7 +55,6 @@ button:disabled{opacity:.4}
 <option>22</option>
 <option>24</option>
 <option>26</option>
-<option>28</option>
 </select>
 
 </div>
@@ -76,10 +75,9 @@ button:disabled{opacity:.4}
 </div>
 
 <script>
-
 const volume=Number(new URLSearchParams(location.search).get("ch")||0);
 
-document.getElementById("volumeTitle").textContent="Volume "+(volume+1);
+document.getElementById("volTitle").textContent="Volume "+(volume+1);
 
 const files=[
 "texts/new-life-young-again-v1.txt",
@@ -88,8 +86,9 @@ const files=[
 ];
 
 const chapterSelect=document.getElementById("chapterSelect");
-const title=document.getElementById("chapterTitle");
+const chapterTitle=document.getElementById("chapterTitle");
 const content=document.getElementById("content");
+
 const prev=document.getElementById("prev");
 const next=document.getElementById("next");
 
@@ -117,22 +116,27 @@ let text=await fetch(files[volume]).then(r=>r.text());
 
 text=text.replace(/\r/g,"");
 
-/* remove everything before the REAL prologue */
-const matches=[...text.matchAll(/^Prologue:/gm)];
-if(matches.length>1){
-text=text.slice(matches[1].index);
-}else if(matches.length===1){
-text=text.slice(matches[0].index);
+/* REMOVE TABLE OF CONTENTS */
+
+const pros=[...text.matchAll(/^Prologue:/gm)];
+
+if(pros.length>=2){
+text=text.slice(pros[1].index);
 }
 
-/* remove Afterword */
-text=text.replace(/^Afterword[\s\S]*/m,"");
+/* REMOVE AFTERWORD */
+
+const after=text.search(/^Afterword/m);
+
+if(after!==-1){
+text=text.slice(0,after);
+}
+
+/* SPLIT CHAPTERS */
 
 const rx=/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*)$/gm;
 
 const heads=[...text.matchAll(rx)];
-
-chapters=[];
 
 for(let i=0;i<heads.length;i++){
 
@@ -151,31 +155,27 @@ body:text.slice(start+heads[i][0].length,end).trim()
 
 }
 
-/* if parser fails, show full text */
-if(chapters.length===0){
+/* FALLBACK */
 
+if(chapters.length===0){
 chapters=[{
 title:"Chapter 1",
 body:text
 }];
-
 }
 
 chapterSelect.innerHTML="";
 
 chapters.forEach((c,i)=>{
-
 chapterSelect.innerHTML+=`<option value="${i}">${c.title}</option>`;
-
 });
 
 show();
-
 }
 
 function show(){
 
-title.textContent=chapters[current].title;
+chapterTitle.textContent=chapters[current].title;
 content.textContent=chapters[current].body;
 
 chapterSelect.value=current;
@@ -183,39 +183,31 @@ chapterSelect.value=current;
 prev.disabled=current===0;
 next.disabled=current===chapters.length-1;
 
-scrollTo({top:0,behavior:"smooth"});
-
 applyStyle();
 
+window.scrollTo({top:0,behavior:"smooth"});
 }
 
 chapterSelect.onchange=()=>{
-
 current=+chapterSelect.value;
 show();
-
 };
 
 prev.onclick=()=>{
-
 if(current>0){
 current--;
 show();
 }
-
 };
 
 next.onclick=()=>{
-
 if(current<chapters.length-1){
 current++;
 show();
 }
-
 };
 
 load();
-
 </script>
 
 </body>
