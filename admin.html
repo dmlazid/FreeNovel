@@ -6,7 +6,7 @@
 <title>FreeNovel Admin</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.js"></script>
 <style>
 body{
 font-family:Arial;
@@ -45,7 +45,8 @@ font-size:16px;
 
 <input id="genre" placeholder="Genre">
 
-<input id="cover" placeholder="Cover image URL">
+<label>Cover Image</label>
+<input id="coverFile" type="file" accept="image/*">
 
 <textarea id="text"
 placeholder="Paste your whole novel here.
@@ -65,7 +66,8 @@ More story...
 
 <input id="branch" value="main" placeholder="Branch">
 
-<input id="fileInput" type="file" accept=".txt,.docx,.pdf">
+<label>Novel PDF</label>
+<input id="pdfInput" type="file" accept=".pdf,.txt">
   
 <button onclick="publish()">🚀 Publish to GitHub</button>
 
@@ -169,7 +171,7 @@ async function uploadFile(token, repo, path, content) {
     },
     body: JSON.stringify({
       message: `Upload ${path}`,
-      content: btoa(unescape(encodeURIComponent(content))),
+      content: btoa(String.fromCharCode(...new Uint8Array(content))),
       sha
     })
   });
@@ -182,15 +184,26 @@ async function publish() {
   const title = document.getElementById("title").value.trim();
   const author = document.getElementById("author").value.trim();
   const genre = document.getElementById("genre").value.trim();
-  const cover = document.getElementById("cover").value.trim();
+  const coverFile = document.getElementById("coverFile").files[0];
+const cover = coverFile ? `covers/${id}.jpg` : "";
 
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-  const raw = document.getElementById("text").value;
+  const pdfFile = document.getElementById("pdfInput").files[0];
+if (!pdfFile) return alert("Choose a PDF.");
 
-  const chapters = raw
-    .split(/(?=Chapter\s+\d+)/i)
-    .filter(x => x.trim());
+const pdf = await pdfjsLib.getDocument(await pdfFile.arrayBuffer()).promise;
+
+let raw = "";
+for (let p = 1; p <= pdf.numPages; p++) {
+  const page = await pdf.getPage(p);
+  const text = await page.getTextContent();
+  raw += text.items.map(i => i.str).join(" ") + "\n";
+}
+
+const chapters = raw
+  .split(/(?=Chapter\s+\d+)/i)
+  .filter(x => x.trim());
 
   const json = {
     title,
@@ -207,7 +220,7 @@ async function publish() {
 
     json.chapters.push({
   title: `Chapter ${i+1}`,
-  file: `chapters/${id}/ch${i+1}.txt`
+  file: file
 });
   }
 
@@ -217,7 +230,21 @@ async function publish() {
   `data/${id}.json`,
   JSON.stringify(json, null, 2)
 );
+await uploadFile(
+  token,
+  repo,
+  `pdfs/${id}.pdf`,
+  await pdfFile.arrayBuffer()
+);
 
+if (coverFile) {
+  await uploadFile(
+    token,
+    repo,
+    `covers/${id}.jpg`,
+    await coverFile.arrayBuffer()
+  );
+}
 // Download current novels.json
 const res = await fetch("data/novels.json");
 const novels = await res.json();
