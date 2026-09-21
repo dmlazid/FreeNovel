@@ -1,11 +1,47 @@
-[
-  {
-    "id": "new-life-young-again-in-another-world",
-    "title": "[New Life+] Young Again in Another World",
-    "author": "Mine Illustrator Kabocha",
-    "genre": "Action, Adventure, Comedy, Fantasy, Harem, Romance, Seinen",
-    "cover": "covers/new-life-young-again-in-another-world.png",
-    "chapters": 3,
-    "status": "Ongoing"
-  }
-]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreeNovel</title>
+<style>
+body{margin:0;font-family:sans-serif;background:#eef2f3}
+header{background:#00897b;color:#fff;padding:16px;font-size:24px;font-weight:bold}
+.container{padding:20px}
+.card{background:#fff;border-radius:20px;padding:20px;text-align:center}
+.cover{width:220px;border-radius:12px}
+.btn{display:block;background:#00897b;color:#fff;text-decoration:none;padding:16px;border-radius:30px;margin:12px 0;font-weight:bold}
+</style>
+</head>
+<body>
+
+<header>📚 FreeNovel</header>
+
+<div class="container">
+<div class="card" id="novel"></div>
+</div>
+
+<script>
+const params=new URLSearchParams(location.search);
+const id=params.get("id");
+
+async function load(){
+ const data=await fetch(`data/${id}.json`).then(r=>r.json());
+
+ document.getElementById("novel").innerHTML=`
+ <img class="cover" src="${data.cover}" onerror="this.src='https://placehold.co/300x420?text=No+Cover'">
+ <h1>${data.title}</h1>
+ <p>By ${data.author}</p>
+ <p>${data.genre}</p>
+ <p>${data.chapters.length} Volumes · Ongoing</p>
+ <h2>Volumes</h2>
+ ${data.chapters.map((c,i)=>`
+   <a class="btn" href="reader.html?id=${id}&ch=${i}">${c.title}</a>
+ `).join("")}
+ `;
+}
+load();
+</script>
+
+</body>
+</html>
