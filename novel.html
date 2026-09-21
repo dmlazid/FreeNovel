@@ -1,68 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FreeNovel</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
-body{margin:0;background:#dfe5e5;font-family:Arial}
-header{background:#00897b;padding:18px}
-header a{color:#fff;text-decoration:none;font-size:42px}
-.card{background:#fff;margin:20px;border-radius:25px;padding:20px;text-align:center}
-.cover{width:70%;max-width:280px;border-radius:20px}
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:Poppins,sans-serif;
+background:#e7eceb;
+}
+header{
+background:#00897b;
+padding:16px;
+position:sticky;
+top:0;
+}
+.logo{
+height:52px;
+}
+.container{
+max-width:760px;
+margin:auto;
+padding:20px;
+}
+.card{
+background:#fff;
+border-radius:22px;
+padding:22px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+.cover{
+width:200px;
+display:block;
+margin:0 auto 20px;
+border-radius:12px;
+}
+h1{
+text-align:center;
+color:#00897b;
+font-size:30px;
+margin:0 0 8px;
+}
+.meta{
+text-align:center;
+color:#666;
+margin-bottom:18px;
+}
+.volumes{
+display:flex;
+flex-direction:column;
+gap:14px;
+margin-top:20px;
+}
 .btn{
 display:block;
-margin:15px auto;
 background:#00897b;
-color:white;
-padding:18px;
-border-radius:35px;
+color:#fff;
 text-decoration:none;
-font-size:22px;
-font-weight:bold;
+text-align:center;
+padding:18px;
+border-radius:14px;
+font-size:20px;
+font-weight:600;
+transition:.2s;
+}
+.btn:active{
+transform:scale(.98);
 }
 </style>
 </head>
-
 <body>
 
 <header>
-<a href="index.html">📚 FreeNovel</a>
+<a href="index.html">
+<img src="assets/logo.png" class="logo" alt="FreeNovel">
+</a>
 </header>
 
-<div id="app" class="card">Loading...</div>
+<div class="container">
+<div class="card">
 
-<script>
-const id=new URLSearchParams(location.search).get("id");
+<img src="covers/new-life-young-again.png" class="cover">
 
-fetch(`data/${id}.json`)
-.then(r=>r.json())
-.then(book=>{
+<h1>[New Life+] Young Again in Another World</h1>
 
-let html=`
-<img class="cover" src="${book.cover}">
-<h1>${book.title}</h1>
-<p>${book.author}</p>
-<p>${book.genre}</p>
-<h2>Volumes</h2>
-`;
+<div class="meta">
+Mine (Illustrator Kaboccha)<br>
+Action • Adventure • Comedy • Fantasy • Romance
+</div>
 
-book.chapters.forEach((v,i)=>{
-html+=`
-<a class="btn" href="read.html?id=${book.id}&ch=${i+1}">
-${v.title}
-</a>
-`;
-});
+<div class="volumes">
+<a class="btn" href="read.html?id=new-life-young-again&ch=0">📖 Volume 1</a>
+<a class="btn" href="read.html?id=new-life-young-again&ch=1">📖 Volume 2</a>
+<a class="btn" href="read.html?id=new-life-young-again&ch=2">📖 Volume 3</a>
+</div>
 
-document.getElementById("app").innerHTML=html;
-
-})
-.catch(()=>{
-document.getElementById("app").innerHTML="<h2>Novel not found.</h2>";
-});
-</script>
+</div>
+</div>
 
 </body>
 </html>
