@@ -6,105 +6,152 @@
 <title>FreeNovel Reader</title>
 
 <style>
+*{box-sizing:border-box;}
 body{
   margin:0;
-  background:#dfe5e5;
+  background:#111;
+  color:white;
   font-family:Arial,sans-serif;
 }
 header{
   background:#00897b;
   padding:18px;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 header a{
-  color:#fff;
+  color:white;
   text-decoration:none;
-  font-size:42px;
+  font-size:36px;
 }
-.card{
-  background:#fff;
-  margin:20px;
-  border-radius:28px;
-  padding:20px;
-}
-h2{
+#title{
   text-align:center;
+  margin:15px;
 }
-#viewer{
-  width:100%;
-  height:80vh;
-  border:none;
-  border-radius:16px;
-  background:#fff;
-}
-.topnav{
+.nav{
   display:flex;
   justify-content:space-between;
-  margin-bottom:15px;
+  gap:10px;
+  padding:10px 15px;
 }
 .btn{
+  flex:1;
   background:#00897b;
-  color:#fff;
-  padding:12px 22px;
+  color:white;
+  text-align:center;
+  padding:14px;
   border-radius:30px;
   text-decoration:none;
   font-weight:bold;
 }
+#pages{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  padding-bottom:30px;
+}
+canvas{
+  width:100%;
+  max-width:900px;
+  height:auto;
+  display:block;
+}
+.loading{
+  text-align:center;
+  padding:40px;
+  font-size:22px;
+}
 </style>
 </head>
+
 <body>
 
 <header>
 <a href="index.html">📚 FreeNovel</a>
 </header>
 
-<div class="card">
+<h2 id="title">Loading...</h2>
 
-<div class="topnav">
-<a id="prev" class="btn">◀ Prev Volume</a>
+<div class="nav">
+<a id="prev" class="btn">◀ Previous Volume</a>
 <a id="next" class="btn">Next Volume ▶</a>
 </div>
 
-<h2 id="title">Loading...</h2>
-
-<iframe id="viewer"></iframe>
-
+<div id="pages">
+<div class="loading">Loading pages...</div>
 </div>
 
+<div class="nav">
+<a id="prev2" class="btn">◀ Previous Volume</a>
+<a id="next2" class="btn">Next Volume ▶</a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <script>
-const params=new URLSearchParams(location.search);
-const id=params.get("id");
-let ch=parseInt(params.get("ch")||1);
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-fetch(`data/${id}.json`)
-.then(r=>r.json())
-.then(book=>{
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const ch = parseInt(params.get("ch") || "1");
 
-const total=book.chapters.length;
-const current=book.chapters[ch-1];
+async function start(){
 
-document.getElementById("title").textContent=
-`${book.title} — ${current.title}`;
+  const book = await fetch(`data/${id}.json`).then(r=>r.json());
+  const volume = book.chapters[ch-1];
 
-document.getElementById("viewer").src=current.pdf+"#toolbar=0&navpanes=0";
+  document.getElementById("title").textContent =
+  `${book.title} — ${volume.title}`;
 
-const prev=document.getElementById("prev");
-const next=document.getElementById("next");
+  const total = book.chapters.length;
 
-if(ch>1){
-  prev.href=`read.html?id=${id}&ch=${ch-1}`;
-}else{
-  prev.style.visibility="hidden";
+  function link(btn,n){
+    if(n<1||n>total){
+      btn.style.visibility="hidden";
+    }else{
+      btn.href=`read.html?id=${id}&ch=${n}`;
+    }
+  }
+
+  link(prev,ch-1);
+  link(prev2,ch-1);
+  link(next,ch+1);
+  link(next2,ch+1);
+
+  const pdf = await pdfjsLib.getDocument(volume.pdf).promise;
+
+  const pages=document.getElementById("pages");
+  pages.innerHTML="";
+
+  for(let i=1;i<=pdf.numPages;i++){
+
+    const page=await pdf.getPage(i);
+
+    const viewport=page.getViewport({scale:1.8});
+
+    const canvas=document.createElement("canvas");
+    const ctx=canvas.getContext("2d");
+
+    canvas.width=viewport.width;
+    canvas.height=viewport.height;
+
+    await page.render({
+      canvasContext:ctx,
+      viewport
+    }).promise;
+
+    pages.appendChild(canvas);
+
+  }
+
 }
 
-if(ch<total){
-  next.href=`read.html?id=${id}&ch=${ch+1}`;
-}else{
-  next.style.visibility="hidden";
-}
-
-})
-.catch(()=>{
-document.querySelector(".card").innerHTML="<h2>Reader failed to load.</h2>";
+start().catch(err=>{
+document.getElementById("pages").innerHTML=
+`<div class="loading">Failed to load.<br>${err.message}</div>`;
 });
 </script>
 
