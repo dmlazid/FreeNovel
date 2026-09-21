@@ -2,70 +2,60 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FreeNovel Reader</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:'Poppins',sans-serif;
-  background:#eef2f1;
-  color:#2f2f2f;
+body{font-family:'Poppins',sans-serif;background:#f3f3f3;color:#333}
+header{background:#00897b;padding:16px;position:sticky;top:0;z-index:100}
+header a{color:#fff;text-decoration:none;font-size:30px;font-weight:600}
+.container{max-width:760px;margin:auto;padding:18px}
+.title{text-align:center;color:#00897b;font-size:24px;font-weight:700}
+.chapter{text-align:center;color:#666;margin:10px 0 20px;font-size:18px}
+
+.toolbar{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:8px;
+margin-bottom:18px;
 }
-header{
-  background:#00897b;
-  padding:18px;
-  position:sticky;
-  top:0;
+
+select,button{
+padding:12px;
+border:none;
+border-radius:8px;
+font-size:16px;
+background:#00897b;
+color:white;
 }
-header a{
-  color:#fff;
-  text-decoration:none;
-  font-size:32px;
-  font-weight:600;
-}
-.container{
-  max-width:760px;
-  margin:auto;
-  padding:18px;
-}
-.title{
-  text-align:center;
-  color:#00897b;
-  font-size:28px;
-  font-weight:700;
-  text-transform:uppercase;
-}
-.subtitle{
-  text-align:center;
-  color:#666;
-  font-size:20px;
-  margin:10px 0 25px;
-}
+
 .reader{
-  background:#fff;
-  border-radius:20px;
-  padding:26px;
-  font-size:19px;
-  line-height:1.95;
-  white-space:pre-wrap;
+background:white;
+padding:28px;
+border-radius:12px;
+font-size:18px;
+line-height:2;
+white-space:pre-wrap;
 }
+
 .nav{
-  display:flex;
-  gap:12px;
-  margin-top:20px;
+display:flex;
+gap:10px;
+margin-top:20px;
 }
+
 .nav a{
-  flex:1;
-  text-align:center;
-  text-decoration:none;
-  background:#00897b;
-  color:#fff;
-  padding:15px;
-  border-radius:10px;
-  font-weight:600;
+flex:1;
+background:#00897b;
+color:white;
+text-decoration:none;
+text-align:center;
+padding:14px;
+border-radius:8px;
+font-weight:600;
 }
 </style>
 </head>
@@ -73,15 +63,25 @@ header a{
 <body>
 
 <header>
-  <a href="index.html">📚 FreeNovel</a>
+<a href="index.html">📚 FreeNovel</a>
 </header>
 
 <div class="container">
 
 <div id="bookTitle" class="title">Loading...</div>
-<div id="chapterTitle" class="subtitle"></div>
+<div id="chapterTitle" class="chapter"></div>
 
-<div id="content" class="reader">Loading...</div>
+<div class="toolbar">
+
+<select id="chapterSelect"></select>
+
+<button id="fontBtn">Font</button>
+
+<button id="sizeBtn">18px</button>
+
+</div>
+
+<div id="reader" class="reader">Loading...</div>
 
 <div class="nav">
 <a id="prev">◀ Previous</a>
@@ -91,9 +91,29 @@ header a{
 </div>
 
 <script>
-const params=new URLSearchParams(location.search);
-const id=params.get("id");
-const ch=parseInt(params.get("ch")||1);
+const q=new URLSearchParams(location.search);
+const id=q.get("id");
+let ch=parseInt(q.get("ch")||1);
+
+const fonts=[
+"'Poppins',sans-serif",
+"'Inter',sans-serif",
+"Georgia,serif"
+];
+
+let fontIndex=0;
+let fontSize=18;
+
+fontBtn.onclick=()=>{
+fontIndex=(fontIndex+1)%fonts.length;
+reader.style.fontFamily=fonts[fontIndex];
+};
+
+sizeBtn.onclick=()=>{
+fontSize=fontSize>=24?16:fontSize+2;
+reader.style.fontSize=fontSize+"px";
+sizeBtn.textContent=fontSize+"px";
+};
 
 async function load(){
 
@@ -105,45 +125,37 @@ chapterTitle.textContent=chapter.title;
 
 let text=chapter.text;
 
-// ---------- REAL STORY START ----------
-const prologues=[...text.matchAll(/(^|\n)Prologue:/gm)];
+// Skip TOC
+const p=[...text.matchAll(/(^|\n)Prologue:/gm)];
+if(p.length>=2) text=text.slice(p[1].index);
+else if(p.length===1) text=text.slice(p[0].index);
 
-if(prologues.length>=2){
-  text=text.slice(prologues[1].index);
-}else if(prologues.length===1){
-  text=text.slice(prologues[0].index);
-}else{
-  const c1=text.match(/(^|\n)Chapter\s*1:/m);
-  if(c1) text=text.slice(c1.index);
-}
+reader.textContent=text.trim();
 
-// Remove leftover front matter
-text=text
-.replace(/^Table of Contents[\s\S]*?(?=Prologue:|Chapter\s*1:)/i,"")
-.replace(/^Cover$/gim,"")
-.replace(/^Color Illustrations$/gim,"")
-.replace(/\n{3,}/g,"\n\n")
-.trim();
-// --------------------------------------
+// Chapter selector
+chapterSelect.innerHTML="";
 
-content.textContent=text;
-
-if(ch>1){
-prev.href=`read.html?id=${id}&ch=${ch-1}`;
-}else{
-prev.style.visibility="hidden";
-}
-
-if(ch<book.chapters.length){
-next.href=`read.html?id=${id}&ch=${ch+1}`;
-}else{
-next.style.visibility="hidden";
-}
-}
-
-load().catch(e=>{
-content.textContent=e.message;
+book.chapters.forEach((c,i)=>{
+const o=document.createElement("option");
+o.value=i+1;
+o.textContent=c.title;
+if(i+1===ch) o.selected=true;
+chapterSelect.appendChild(o);
 });
+
+chapterSelect.onchange=()=>{
+location=`read.html?id=${id}&ch=${chapterSelect.value}`;
+};
+
+if(ch>1) prev.href=`read.html?id=${id}&ch=${ch-1}`;
+else prev.style.visibility="hidden";
+
+if(ch<book.chapters.length) next.href=`read.html?id=${id}&ch=${ch+1}`;
+else next.style.visibility="hidden";
+
+}
+
+load();
 </script>
 
 </body>
