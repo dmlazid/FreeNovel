@@ -2,73 +2,96 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FreeNovel</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-*{box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box}
+
 body{
-margin:0;
+background:#e6eceb;
 font-family:Poppins,sans-serif;
-background:#e7eceb;
 }
+
 header{
 background:#00897b;
-padding:16px;
-position:sticky;
-top:0;
+padding:18px;
 }
+
 .logo{
 height:52px;
 }
+
 .container{
 max-width:760px;
 margin:auto;
-padding:20px;
+padding:18px;
 }
+
 .card{
 background:#fff;
 border-radius:22px;
-padding:22px;
-box-shadow:0 4px 12px rgba(0,0,0,.08);
+padding:24px;
+box-shadow:0 6px 16px rgba(0,0,0,.08);
 }
+
 .cover{
-width:200px;
+width:180px;
 display:block;
-margin:0 auto 20px;
-border-radius:12px;
+margin:auto;
+border-radius:14px;
 }
+
 h1{
 text-align:center;
 color:#00897b;
 font-size:30px;
-margin:0 0 8px;
+font-weight:700;
+margin:18px 0 10px;
 }
-.meta{
+
+.author,
+.genre{
 text-align:center;
 color:#666;
-margin-bottom:18px;
+font-size:16px;
+margin-bottom:6px;
 }
+
+.desc{
+margin:18px 0;
+line-height:1.8;
+font-size:15px;
+color:#444;
+}
+
+h2{
+margin:24px 0 14px;
+color:#00897b;
+font-size:24px;
+}
+
 .volumes{
 display:flex;
 flex-direction:column;
 gap:14px;
-margin-top:20px;
 }
+
 .btn{
 display:block;
+text-align:center;
+padding:18px;
 background:#00897b;
 color:#fff;
 text-decoration:none;
-text-align:center;
-padding:18px;
 border-radius:14px;
 font-size:20px;
 font-weight:600;
 transition:.2s;
 }
+
 .btn:active{
 transform:scale(.98);
 }
@@ -78,29 +101,48 @@ transform:scale(.98);
 
 <header>
 <a href="index.html">
-<img src="assets/logo.png" class="logo" alt="FreeNovel">
+<img src="assets/logo.png" class="logo">
 </a>
 </header>
 
 <div class="container">
+
 <div class="card">
 
 <img src="covers/new-life-young-again.png" class="cover">
 
 <h1>[New Life+] Young Again in Another World</h1>
 
-<div class="meta">
-Mine (Illustrator Kaboccha)<br>
+<p class="author">Mine • Illustrator: Kaboccha</p>
+
+<p class="genre">
 Action • Adventure • Comedy • Fantasy • Romance
-</div>
+</p>
+
+<p class="desc">
+After dying unexpectedly, Renya is reincarnated into another world by an overly cheerful goddess. Instead of the peaceful life he expected, he becomes entangled in dangerous adventures, powerful enemies, and unexpected companions.
+</p>
+
+<h2>Volumes</h2>
 
 <div class="volumes">
-<a class="btn" href="read.html?id=new-life-young-again&ch=0">📖 Volume 1</a>
-<a class="btn" href="read.html?id=new-life-young-again&ch=1">📖 Volume 2</a>
-<a class="btn" href="read.html?id=new-life-young-again&ch=2">📖 Volume 3</a>
+
+<a class="btn" href="read.html?ch=0">
+📖 Volume 1
+</a>
+
+<a class="btn" href="read.html?ch=1">
+📖 Volume 2
+</a>
+
+<a class="btn" href="read.html?ch=2">
+📖 Volume 3
+</a>
+
 </div>
 
 </div>
+
 </div>
 
 </body>
