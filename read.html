@@ -3,159 +3,346 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>FreeNovel Reader</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Poppins',sans-serif;background:#f3f3f3;color:#333}
-header{background:#00897b;padding:16px;position:sticky;top:0;z-index:100}
-header a{color:#fff;text-decoration:none;font-size:30px;font-weight:600}
-.container{max-width:760px;margin:auto;padding:18px}
-.title{text-align:center;color:#00897b;font-size:24px;font-weight:700}
-.chapter{text-align:center;color:#666;margin:10px 0 20px;font-size:18px}
 
-.toolbar{
-display:grid;
-grid-template-columns:1fr 1fr 1fr;
-gap:8px;
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:#e7eceb;
+font-family:Poppins,sans-serif;
+}
+
+header{
+background:#00897b;
+padding:16px;
+position:sticky;
+top:0;
+z-index:100;
+}
+
+.logo{
+height:48px;
+}
+
+.wrap{
+max-width:760px;
+margin:auto;
+padding:18px;
+}
+
+.title{
+text-align:center;
+color:#00897b;
+font-size:22px;
+font-weight:700;
+}
+
+.subtitle{
+text-align:center;
+font-size:16px;
+color:#666;
 margin-bottom:18px;
 }
 
-select,button{
+.controls{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:10px;
+margin-bottom:15px;
+}
+
+select{
+width:100%;
 padding:12px;
 border:none;
-border-radius:8px;
-font-size:16px;
+border-radius:10px;
 background:#00897b;
 color:white;
+font-family:Poppins;
+font-size:16px;
 }
 
 .reader{
 background:white;
-padding:28px;
-border-radius:12px;
+border-radius:18px;
+padding:26px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+#chapterTitle{
+font-size:28px;
+font-weight:700;
+margin-bottom:22px;
+line-height:1.35;
+}
+
+#content{
 font-size:18px;
-line-height:2;
+line-height:1.95;
+color:#222;
 white-space:pre-wrap;
+word-break:break-word;
 }
 
 .nav{
 display:flex;
+justify-content:space-between;
 gap:10px;
-margin-top:20px;
+margin-top:24px;
 }
 
-.nav a{
+button{
 flex:1;
+padding:14px;
+border:none;
+border-radius:12px;
 background:#00897b;
 color:white;
-text-decoration:none;
-text-align:center;
-padding:14px;
-border-radius:8px;
+font-family:Poppins;
+font-size:17px;
 font-weight:600;
 }
+
+button:disabled{
+opacity:.45;
+}
+
 </style>
 </head>
-
 <body>
 
 <header>
-<a href="index.html">📚 FreeNovel</a>
+<a href="index.html">
+<img src="assets/logo.png" class="logo">
+</a>
 </header>
 
-<div class="container">
+<div class="wrap">
 
-<div id="bookTitle" class="title">Loading...</div>
-<div id="chapterTitle" class="chapter"></div>
+<div class="title" id="novelTitle"></div>
+<div class="subtitle" id="volumeTitle"></div>
 
-<div class="toolbar">
+<div class="controls">
 
 <select id="chapterSelect"></select>
 
-<button id="fontBtn">Font</button>
+<select id="fontSelect">
+<option value="Poppins">Poppins</option>
+<option value="Georgia">Serif</option>
+<option value="Arial">Sans</option>
+</select>
 
-<button id="sizeBtn">18px</button>
+<select id="sizeSelect">
+<option>16</option>
+<option selected>18</option>
+<option>20</option>
+<option>22</option>
+<option>24</option>
+<option>26</option>
+<option>28</option>
+<option>30</option>
+</select>
 
 </div>
 
-<div id="reader" class="reader">Loading...</div>
+<div class="reader">
+
+<div id="chapterTitle"></div>
+
+<div id="content"></div>
 
 <div class="nav">
-<a id="prev">◀ Previous</a>
-<a id="next">Next ▶</a>
+
+<button id="prev">◀ Previous</button>
+
+<button id="next">Next ▶</button>
+
+</div>
+
 </div>
 
 </div>
 
 <script>
-const q=new URLSearchParams(location.search);
-const id=q.get("id");
-let ch=parseInt(q.get("ch")||1);
 
-const fonts=[
-"'Poppins',sans-serif",
-"'Inter',sans-serif",
-"Georgia,serif"
-];
+const params=new URLSearchParams(location.search);
 
-let fontIndex=0;
-let fontSize=18;
+const id=params.get("id");
 
-fontBtn.onclick=()=>{
-fontIndex=(fontIndex+1)%fonts.length;
-reader.style.fontFamily=fonts[fontIndex];
-};
+const volume=Number(params.get("ch")||0);
 
-sizeBtn.onclick=()=>{
-fontSize=fontSize>=24?16:fontSize+2;
-reader.style.fontSize=fontSize+"px";
-sizeBtn.textContent=fontSize+"px";
-};
+let chapters=[];
 
-async function load(){
+let current=0;
 
-const book=await fetch(`data/${id}.json`).then(r=>r.json());
-const chapter=await fetch(`chapters/${id}/v${ch}.json`).then(r=>r.json());
+const content=document.getElementById("content");
 
-bookTitle.textContent=book.title;
-chapterTitle.textContent=chapter.title;
+const chapterTitle=document.getElementById("chapterTitle");
 
-let text=chapter.text;
+const chapterSelect=document.getElementById("chapterSelect");
 
-// Skip TOC
-const p=[...text.matchAll(/(^|\n)Prologue:/gm)];
-if(p.length>=2) text=text.slice(p[1].index);
-else if(p.length===1) text=text.slice(p[0].index);
+const prev=document.getElementById("prev");
 
-reader.textContent=text.trim();
+const next=document.getElementById("next");
 
-// Chapter selector
-chapterSelect.innerHTML="";
+const fontSelect=document.getElementById("fontSelect");
 
-book.chapters.forEach((c,i)=>{
-const o=document.createElement("option");
-o.value=i+1;
-o.textContent=c.title;
-if(i+1===ch) o.selected=true;
-chapterSelect.appendChild(o);
-});
+const sizeSelect=document.getElementById("sizeSelect");
 
-chapterSelect.onchange=()=>{
-location=`read.html?id=${id}&ch=${chapterSelect.value}`;
-};
+function savePrefs(){
 
-if(ch>1) prev.href=`read.html?id=${id}&ch=${ch-1}`;
-else prev.style.visibility="hidden";
+localStorage.setItem("readerFont",fontSelect.value);
 
-if(ch<book.chapters.length) next.href=`read.html?id=${id}&ch=${ch+1}`;
-else next.style.visibility="hidden";
+localStorage.setItem("readerSize",sizeSelect.value);
+
+content.style.fontFamily=fontSelect.value;
+
+content.style.fontSize=sizeSelect.value+"px";
 
 }
 
-load();
+fontSelect.onchange=savePrefs;
+
+sizeSelect.onchange=savePrefs;
+
+fontSelect.value=localStorage.getItem("readerFont")||"Poppins";
+
+sizeSelect.value=localStorage.getItem("readerSize")||"18";
+
+savePrefs();
+
+function splitChapters(text){
+
+text=text.replace(/\r/g,"");
+
+text=text.replace(/Table of Contents[\s\S]*?(?=Prologue:|Chapter\s+1:)/i,"");
+
+const first=text.indexOf("Prologue:");
+
+if(first>0)text=text.slice(first);
+
+const regex=/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*|Epilogue:.*|Afterword.*)$/gm;
+
+const matches=[...text.matchAll(regex)];
+
+const arr=[];
+
+for(let i=0;i<matches.length;i++){
+
+const start=matches[i].index;
+
+const end=i+1<matches.length?matches[i+1].index:text.length;
+
+arr.push({
+
+title:matches[i][0].trim(),
+
+body:text.slice(start,end).replace(matches[i][0],"").trim()
+
+});
+
+}
+
+return arr;
+
+}
+
+async function load(){
+
+const novel=await fetch(`data/${id}.json`).then(r=>r.json());
+
+document.getElementById("novelTitle").textContent=novel.title;
+
+document.getElementById("volumeTitle").textContent=novel.chapters[volume].title;
+
+const txt=await fetch(novel.chapters[volume].text).then(r=>r.text());
+
+chapters=splitChapters(txt);
+
+chapterSelect.innerHTML="";
+
+chapters.forEach((c,i)=>{
+
+const o=document.createElement("option");
+
+o.value=i;
+
+o.textContent=c.title;
+
+chapterSelect.appendChild(o);
+
+});
+
+current=Number(params.get("c")||0);
+
+show();
+
+}
+
+function show(){
+
+chapterSelect.value=current;
+
+chapterTitle.textContent=chapters[current].title;
+
+content.textContent=chapters[current].body;
+
+prev.disabled=current===0;
+
+next.disabled=current===chapters.length-1;
+
+history.replaceState({},'',`?id=${id}&ch=${volume}&c=${current}`);
+
+window.scrollTo({top:0});
+
+}
+
+chapterSelect.onchange=()=>{
+
+current=Number(chapterSelect.value);
+
+show();
+
+};
+
+prev.onclick=()=>{
+
+if(current>0){
+
+current--;
+
+show();
+
+}
+
+};
+
+next.onclick=()=>{
+
+if(current<chapters.length-1){
+
+current++;
+
+show();
+
+}
+
+};
+
+load().catch(e=>{
+
+chapterTitle.textContent="Error";
+
+content.textContent=e.message;
+
+});
+
 </script>
 
 </body>
