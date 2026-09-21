@@ -4,81 +4,99 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FreeNovel Reader</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#e6eceb;font-family:Poppins,sans-serif}
-header{background:#00897b;padding:14px;position:sticky;top:0;z-index:100}
-.logo{height:46px}
+header{background:#00897b;padding:14px;position:sticky;top:0;z-index:10}
+.logo{height:48px}
 .wrap{max-width:760px;margin:auto;padding:18px}
-h1{color:#00897b;text-align:center;margin:10px 0}
-h2{text-align:center;color:#666;font-weight:500}
-.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:18px 0}
+h1{text-align:center;color:#00897b;font-size:22px;margin:10px 0}
+h2{text-align:center;color:#666;font-weight:500;margin-bottom:20px}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
 select{padding:12px;border:none;border-radius:10px;background:#00897b;color:#fff;font:16px Poppins}
-.reader{background:#fff;border-radius:20px;padding:28px}
-#chapterTitle{font-size:28px;font-weight:700;line-height:1.3;margin-bottom:20px}
+.reader{background:#fff;border-radius:20px;padding:26px}
+#chapterTitle{font-size:30px;font-weight:700;line-height:1.35;margin-bottom:20px}
 #content{font-size:18px;line-height:1.95;white-space:pre-wrap;color:#222}
 .nav{display:flex;gap:10px;margin-top:22px}
 button{flex:1;padding:14px;border:none;border-radius:12px;background:#00897b;color:#fff;font:600 17px Poppins}
 button:disabled{opacity:.45}
+.loading{text-align:center;color:#666;padding:40px}
 </style>
 </head>
 <body>
 
-<header><a href="index.html"><img src="assets/logo.png" class="logo"></a></header>
+<header>
+<a href="index.html"><img src="assets/logo.png" class="logo"></a>
+</header>
 
 <div class="wrap">
-<h1 id="novelTitle"></h1>
+
+<h1>[New Life+] Young Again in Another World</h1>
 <h2 id="volumeTitle"></h2>
 
 <div class="controls">
 <select id="chapterSelect"></select>
+
 <select id="fontSelect">
 <option>Poppins</option>
 <option>Georgia</option>
 <option>Arial</option>
 </select>
+
 <select id="sizeSelect">
-<option>16</option><option selected>18</option><option>20</option>
-<option>22</option><option>24</option><option>26</option><option>28</option>
+<option>16</option>
+<option selected>18</option>
+<option>20</option>
+<option>22</option>
+<option>24</option>
+<option>26</option>
+<option>28</option>
 </select>
 </div>
 
 <div class="reader">
-<div id="chapterTitle"></div>
-<div id="content"></div>
+
+<div id="chapterTitle">Loading…</div>
+<div id="content" class="loading">Extracting PDF text…</div>
 
 <div class="nav">
 <button id="prev">◀ Previous</button>
 <button id="next">Next ▶</button>
 </div>
+
 </div>
+
 </div>
 
 <script>
-const params=new URLSearchParams(location.search);
-const volume=Number(params.get("ch")||0);
-const novelTitle=document.getElementById("novelTitle");
-const volumeTitle=document.getElementById("volumeTitle");
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const volume=Math.max(0,Math.min(2,Number(new URLSearchParams(location.search).get("ch")||0)));
+
+document.getElementById("volumeTitle").textContent="Volume "+(volume+1);
+
+const pdfs=[
+"pdfs/new-life-young-again-v1.pdf",
+"pdfs/new-life-young-again-v2.pdf",
+"pdfs/new-life-young-again-v3.pdf"
+];
+
+const chapterSelect=document.getElementById("chapterSelect");
 const chapterTitle=document.getElementById("chapterTitle");
 const content=document.getElementById("content");
-const chapterSelect=document.getElementById("chapterSelect");
 const prev=document.getElementById("prev");
 const next=document.getElementById("next");
+
 const fontSelect=document.getElementById("fontSelect");
 const sizeSelect=document.getElementById("sizeSelect");
 
-const files=[
-"texts/new-life-young-again-v1.txt",
-"texts/new-life-young-again-v2.txt",
-"texts/new-life-young-again-v3.txt"
-];
-
-novelTitle.textContent="[New Life+] Young Again in Another World";
-volumeTitle.textContent="Volume "+(volume+1);
-
-fontSelect.value=localStorage.getItem("font")||"Poppins";
-sizeSelect.value=localStorage.getItem("size")||"18";
+fontSelect.value=localStorage.font||"Poppins";
+sizeSelect.value=localStorage.size||"18";
 
 function applyStyle(){
 content.style.fontFamily=fontSelect.value;
@@ -90,57 +108,121 @@ fontSelect.onchange=applyStyle;
 sizeSelect.onchange=applyStyle;
 applyStyle();
 
+async function pdfToText(url){
+
+const pdf=await pdfjsLib.getDocument(url).promise;
+
+let text="";
+
+for(let p=1;p<=pdf.numPages;p++){
+
+const page=await pdf.getPage(p);
+const tc=await page.getTextContent();
+
+let lastY=null;
+
+tc.items.forEach(i=>{
+
+if(lastY!==null&&Math.abs(i.transform[5]-lastY)>8)
+text+="\n";
+
+text+=i.str+" ";
+
+lastY=i.transform[5];
+
+});
+
+text+="\n\n";
+
+}
+
+return text;
+
+}
+
 let chapters=[],current=0;
 
-fetch(files[volume]).then(r=>r.text()).then(text=>{
+pdfToText(pdfs[volume]).then(text=>{
 
 text=text.replace(/\r/g,"");
 
-// Skip TOC by jumping to SECOND Prologue if it exists
+text=text.replace(/Table of Contents[\s\S]*?(?=Prologue:|Chapter\s+1:)/i,"");
+
 const pros=[...text.matchAll(/Prologue:/g)];
-if(pros.length>=2){
-text=text.slice(pros[1].index);
-}else{
+if(pros.length>=2) text=text.slice(pros[1].index);
+else{
 const first=text.search(/Prologue:|Chapter\s+1:/);
 if(first>0) text=text.slice(first);
 }
 
 const regex=/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*|Epilogue:.*|Afterword.*)$/gm;
+
 const m=[...text.matchAll(regex)];
 
 for(let i=0;i<m.length;i++){
+
 const start=m[i].index;
 const end=i+1<m.length?m[i+1].index:text.length;
+
 chapters.push({
 title:m[i][0],
 body:text.slice(start+m[i][0].length,end).trim()
 });
+
 }
 
 chapterSelect.innerHTML="";
+
 chapters.forEach((c,i)=>{
-const o=document.createElement("option");
-o.value=i;
-o.textContent=c.title;
-chapterSelect.appendChild(o);
+
+chapterSelect.innerHTML+=`<option value="${i}">${c.title}</option>`;
+
 });
 
 show();
 
+}).catch(e=>{
+chapterTitle.textContent="Error";
+content.textContent=e.message;
 });
 
 function show(){
+
 chapterSelect.value=current;
 chapterTitle.textContent=chapters[current].title;
 content.textContent=chapters[current].body;
+
 prev.disabled=current===0;
 next.disabled=current===chapters.length-1;
+
 scrollTo(0,0);
+
 }
 
-chapterSelect.onchange=()=>{current=+chapterSelect.value;show();}
-prev.onclick=()=>{if(current){current--;show();}}
-next.onclick=()=>{if(current<chapters.length-1){current++;show();}}
+chapterSelect.onchange=()=>{
+
+current=+chapterSelect.value;
+show();
+
+};
+
+prev.onclick=()=>{
+
+if(current){
+current--;
+show();
+}
+
+};
+
+next.onclick=()=>{
+
+if(current<chapters.length-1){
+current++;
+show();
+}
+
+};
 </script>
 
 </body>
