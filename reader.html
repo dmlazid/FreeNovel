@@ -1,220 +1,57 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FreeNovel</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-
+<title>Reader</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-font-family:Poppins,sans-serif;
-background:#eef1f3;
-color:#222;
-}
-.topbar{
-background:#00897B;
-color:white;
-padding:15px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-position:sticky;
-top:0;
-}
-.logo{font-weight:700;font-size:22px}
-.icon{font-size:24px}
-
-.breadcrumb{
-background:white;
-padding:12px 18px;
-font-size:14px;
-color:#666;
-}
-
-.book{
-background:white;
-margin:15px;
-border-radius:18px;
-padding:18px;
-text-align:center;
-box-shadow:0 4px 12px rgba(0,0,0,.08);
-}
-
-.cover{
-width:120px;
-height:170px;
-border-radius:12px;
-object-fit:cover;
-margin:auto;
-display:block;
-}
-
-.book h2{
-margin:12px 0 6px;
-font-size:22px;
-}
-
-.chapter-title{
-font-size:18px;
-color:#666;
-}
-
-.chapter-list{
-display:flex;
-gap:10px;
-overflow:auto;
-padding:15px;
-}
-
-.chapter-list button{
-background:#00897B;
-color:white;
-border:none;
-padding:10px 18px;
-border-radius:20px;
-white-space:nowrap;
-}
-
-.reader{
-background:white;
-margin:15px;
-border-radius:18px;
-padding:22px;
-box-shadow:0 4px 12px rgba(0,0,0,.08);
-line-height:2;
-font-size:19px;
-white-space:pre-wrap;
-}
-
-.controls{
-display:flex;
-justify-content:space-between;
-padding:15px;
-}
-
-.controls button{
-background:#00897B;
-color:white;
-border:none;
-padding:12px 20px;
-border-radius:25px;
-font-size:16px;
-}
-
-.tools{
-display:flex;
-justify-content:center;
-gap:18px;
-padding:15px;
-}
-
-.tools button{
-background:white;
-border:none;
-width:50px;
-height:50px;
-border-radius:50%;
-font-size:20px;
-box-shadow:0 3px 8px rgba(0,0,0,.12);
-}
+body{margin:0;font-family:Arial,sans-serif;background:#eceff1}
+header{background:#00897b;color:#fff;padding:16px;font-size:28px;font-weight:bold}
+.container{padding:20px}
+.card{background:#fff;border-radius:20px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+iframe{width:100%;height:80vh;border:none;border-radius:12px}
+.nav{display:flex;justify-content:space-between;margin-top:20px}
+button{background:#00897b;color:#fff;border:none;padding:14px 22px;border-radius:30px;font-size:18px}
+button:disabled{opacity:.4}
 </style>
 </head>
-
 <body>
 
-<div class="topbar">
-  <div class="logo" onclick="location.href='./index.html'" style="cursor:pointer;">📚 FreeNovel</div>
-  <div class="icon" onclick="location.href='./index.html'" style="cursor:pointer;">☰</div>
-</div>
+<header>📚 FreeNovel</header>
 
-<div class="breadcrumb">
-  <a href="./index.html">🏠 Home</a> ›
-  <span id="crumb">Novel</span>
-</div>
-</div>
+<div class="container">
+  <div class="card">
+    <h1 id="title"></h1>
+    <h2 id="volume"></h2>
 
-<div class="book">
-<img class="cover" src="https://picsum.photos/300/420?random=1">
-<h2 id="title">Loading...</h2>
-<div class="chapter-title" id="chapterName"></div>
-</div>
+    <iframe id="viewer"></iframe>
 
-<div class="chapter-list" id="chapterList"></div>
-
-<div class="tools">
-<button onclick="changeSize(-1)">A−</button>
-<button onclick="toggleDark()">🌙</button>
-<button onclick="changeSize(1)">A+</button>
-</div>
-
-<div class="reader" id="content"></div>
-
-<div class="controls">
-<button onclick="prev()">◀ Prev</button>
-<button onclick="next()">Next ▶</button>
+    <div class="nav">
+      <button id="prev">◀ Prev</button>
+      <button id="next">Next ▶</button>
+    </div>
+  </div>
 </div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
-const chapter = Number(params.get("chapter") || 1);
+const params=new URLSearchParams(location.search);
+const id=params.get("id");
+let ch=parseInt(params.get("ch")||0);
 
-fetch(`data/${id}.json`)
-.then(r => r.json())
-.then(data => {
-  novel = data;
+async function load(){
+ const data=await fetch("data/"+id+".json").then(r=>r.json());
 
-  document.getElementById("title").innerText = data.title;
-  document.getElementById("chapterName").innerText = data.chapters[chapter - 1].title;
-  document.querySelector(".cover").src = data.cover;
-  document.querySelector(".breadcrumb #crumb").innerText = data.title;
+ document.getElementById("title").textContent=data.title;
+ document.getElementById("volume").textContent=data.chapters[ch].title;
+ document.getElementById("viewer").src=data.chapters[ch].pdf;
 
-  fetch(data.chapters[chapter - 1].file)
-  .then(r => {
-    if (!r.ok) throw new Error("Chapter not found");
-    return r.text();
-  })
-  .then(text => {
-    document.getElementById("content").innerText = text;
-  })
-  .catch(() => {
-    document.getElementById("content").innerText =
-      "Chapter file not found.";
-  });
-  const list = document.getElementById("chapterList");
-  list.innerHTML = "";
+ document.getElementById("prev").disabled=(ch===0);
+ document.getElementById("next").disabled=(ch===data.chapters.length-1);
 
-  data.chapters.forEach((c, i) => {
-    list.innerHTML += `
-      <button onclick="window.location.href='reader.html?id=${id}&chapter=${i+1}'">
-        ${i+1}
-      </button>`;
-  });
-});
-
-
-function prev() {
-  const p = Math.max(1, chapter - 1);
-  window.location.href = `reader.html?id=${id}&chapter=${p}`;
+ document.getElementById("prev").onclick=()=>location=`reader.html?id=${id}&ch=${ch-1}`;
+ document.getElementById("next").onclick=()=>location=`reader.html?id=${id}&ch=${ch+1}`;
 }
-
-function next() {
-  window.location.href = `reader.html?id=${id}&chapter=${chapter + 1}`;
-}
-
-let font = 19;
-function changeSize(x){
-  font += x;
-  document.getElementById("content").style.fontSize = font + "px";
-}
-
-function toggleDark(){
-  document.body.classList.toggle("dark");
-}
+load();
 </script>
 
 </body>
