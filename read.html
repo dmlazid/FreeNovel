@@ -2,134 +2,68 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FreeNovel</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-
 body{
-font-family:Poppins,sans-serif;
-background:#d9dddd;
-color:#222;
+    background:#d9dddd;
+    font-family:Poppins,sans-serif;
 }
-
 header{
-position:sticky;
-top:0;
-z-index:100;
-background:#00897B;
-padding:16px 20px;
+    background:#00897B;
+    padding:16px;
 }
-
-.brand{
-display:flex;
-align-items:center;
-gap:12px;
-text-decoration:none;
-color:white;
-font-size:30px;
-font-weight:700;
+.logo{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    color:#fff;
+    text-decoration:none;
+    font-size:30px;
+    font-weight:700;
 }
-
-.brand img{
-width:48px;
-height:48px;
-object-fit:contain;
+.logo img{
+    width:48px;
+    height:48px;
+    object-fit:contain;
 }
-
-.page{
-max-width:760px;
-margin:auto;
-padding:28px 18px;
+.wrap{
+    max-width:900px;
+    margin:auto;
+    padding:20px;
 }
-
-h1{
-text-align:center;
-font-size:32px;
-font-weight:800;
-color:#00897B;
-margin-bottom:12px;
+.title{
+    text-align:center;
+    color:#00897B;
+    font-size:34px;
+    font-weight:800;
+    margin-bottom:8px;
 }
-
-#volumeBtn{
-display:block;
-margin:auto;
-background:none;
-border:none;
-font-size:34px;
-font-family:Poppins,sans-serif;
-color:#666;
-cursor:pointer;
-margin-bottom:22px;
+#volumeSelect{
+    display:block;
+    margin:0 auto 20px;
+    padding:14px 22px;
+    border:none;
+    border-radius:14px;
+    background:#00897B;
+    color:#fff;
+    font-size:20px;
+    font-family:Poppins,sans-serif;
 }
-
-.controls{
-display:grid;
-grid-template-columns:2fr 1fr 90px;
-gap:10px;
-margin-bottom:20px;
+.viewer{
+    background:#fff;
+    border-radius:22px;
+    overflow:hidden;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
 }
-
-select{
-width:100%;
-padding:15px;
-border:none;
-border-radius:14px;
-background:#00897B;
-color:white;
-font-family:Poppins,sans-serif;
-font-size:18px;
-outline:none;
-}
-
-.reader{
-background:white;
-border-radius:28px;
-padding:28px;
-box-shadow:0 8px 30px rgba(0,0,0,.08);
-}
-
-#chapterTitle{
-font-size:28px;
-font-weight:800;
-margin-bottom:24px;
-}
-
-#content{
-max-width:560px;
-margin:auto;
-font-size:18px;
-line-height:2;
-white-space:pre-wrap;
-word-break:break-word;
-}
-
-.nav{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:12px;
-margin-top:26px;
-}
-
-.nav button{
-padding:18px;
-border:none;
-border-radius:16px;
-background:#00897B;
-color:white;
-font-family:Poppins,sans-serif;
-font-size:20px;
-font-weight:700;
-cursor:pointer;
-}
-
-.nav button:disabled{
-background:#9fd4ce;
-cursor:not-allowed;
+iframe{
+    width:100%;
+    height:90vh;
+    border:none;
 }
 </style>
 </head>
@@ -137,264 +71,51 @@ cursor:not-allowed;
 <body>
 
 <header>
-<a href="index.html" class="brand">
+<a class="logo" href="index.html">
 <img src="logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/29/29302.png'">
 <span>FreeNovel</span>
 </a>
 </header>
 
-<div class="page">
+<div class="wrap">
 
-<h1>[New Life+] Young Again in Another World</h1>
+<div class="title">[New Life+] Young Again in Another World</div>
 
-<button id="volumeBtn">Volume 1 ▼</button>
-
-<div class="controls">
-
-<select id="chapterSelect"></select>
-
-<select id="fontSelect">
-<option>Poppins</option>
-<option>Georgia</option>
-<option>Arial</option>
-<option>Verdana</option>
+<select id="volumeSelect">
+    <option value="0">Volume 1</option>
+    <option value="1">Volume 2</option>
+    <option value="2">Volume 3</option>
 </select>
 
-<select id="sizeSelect">
-<option>16</option>
-<option selected>18</option>
-<option>20</option>
-<option>22</option>
-<option>24</option>
-</select>
-
-</div>
-
-<div class="reader">
-
-<h2 id="chapterTitle"></h2>
-
-<div id="content"></div>
-
-<div class="nav">
-
-<button id="prev">◀ Previous</button>
-
-<button id="next">Next ▶</button>
-
-</div>
-
+<div class="viewer">
+    <iframe id="pdfViewer"></iframe>
 </div>
 
 </div>
 
 <script>
-
-const files=[
-"texts/new-life-young-again-v1.txt",
-"texts/new-life-young-again-v2.txt",
-"texts/new-life-young-again-v3.txt"
+const pdfs=[
+"pdfs/new-life-young-again-v1.pdf",
+"pdfs/new-life-young-again-v2.pdf",
+"pdfs/new-life-young-again-v3.pdf"
 ];
 
-const params=new URLSearchParams(location.search);
+const viewer=document.getElementById("pdfViewer");
+const select=document.getElementById("volumeSelect");
 
+const params=new URLSearchParams(location.search);
 let volume=Number(params.get("ch"))||0;
 
-let chapters=[];
+select.value=volume;
 
-let current=0;
-
-const volumeBtn=document.getElementById("volumeBtn");
-const chapterSelect=document.getElementById("chapterSelect");
-const chapterTitle=document.getElementById("chapterTitle");
-const content=document.getElementById("content");
-const fontSelect=document.getElementById("fontSelect");
-const sizeSelect=document.getElementById("sizeSelect");
-const prev=document.getElementById("prev");
-const next=document.getElementById("next");
-
-fontSelect.onchange=()=>{
-content.style.fontFamily=fontSelect.value;
-};
-
-sizeSelect.onchange=()=>{
-content.style.fontSize=sizeSelect.value+"px";
-};
-
-volumeBtn.onclick=()=>{
-volume=(volume+1)%3;
-history.replaceState({},'',`read.html?ch=${volume}`);
-loadVolume();
-};
-
-async function loadVolume(){
-
-volumeBtn.textContent=`Volume ${volume+1} ▼`;
-
-let text=await fetch(files[volume]).then(r=>r.text());
-
-text=text.replace(/\r/g,'');
-
-if(volume===0) chapters=parseV1(text);
-if(volume===1) chapters=parseV2(text);
-if(volume===2) chapters=parseV3(text);
-
-chapterSelect.innerHTML='';
-
-chapters.forEach((c,i)=>{
-chapterSelect.innerHTML+=`<option value="${i}">${c.title}</option>`;
-});
-
-current=0;
-
-show();
-
+function loadVolume(v){
+    viewer.src=pdfs[v]+"#toolbar=0&navpanes=0&scrollbar=1";
+    history.replaceState({},'',`read.html?ch=${v}`);
 }
 
-function parseV1(text){
+select.onchange=()=>loadVolume(Number(select.value));
 
-const p=[...text.matchAll(/^Prologue:/gm)];
-
-if(p.length>=2) text=text.slice(p[1].index);
-
-const after=text.search(/^Afterword/m);
-
-if(after!=-1) text=text.slice(0,after);
-
-return split(text,true);
-
-}
-
-function parseV2(text){
-
-const p=[...text.matchAll(/^Prologue:/gm)];
-
-if(p.length>=2){
-
-text=text.slice(p[1].index);
-
-}else if(p.length){
-
-text=text.slice(p[0].index);
-
-}
-
-const after=text.search(/^Afterword/m);
-
-if(after!=-1) text=text.slice(0,after);
-
-return split(text,true);
-
-}
-
-function parseV3(text){
-
-const s=text.search(/^(Prologue:|Chapter\s+\d+:|Interlude:)/m);
-
-if(s!=-1) text=text.slice(s);
-
-const after=text.search(/^Afterword/m);
-
-if(after!=-1) text=text.slice(0,after);
-
-return split(text,false);
-
-}
-
-function split(text,rename){
-
-const list=[];
-
-const rx=/^(Prologue:.*|Chapter\s+\d+:.*|Interlude:.*|Epilogue:.*)$/gm;
-
-const heads=[...text.matchAll(rx)];
-
-for(let i=0;i<heads.length;i++){
-
-const start=heads[i].index;
-
-const end=i+1<heads.length?heads[i+1].index:text.length;
-
-let title=heads[i][0];
-
-if(rename&&title.startsWith("Prologue"))
-title="Chapter 1";
-
-let body=text.slice(start+heads[i][0].length,end).trim();
-
-body=body
-.replace(/^Was Told\s*/,'')
-.replace(/^Told\s*/,'');
-
-list.push({title,body});
-
-}
-
-if(!list.length){
-
-list.push({
-title:"Chapter 1",
-body:text.trim()
-});
-
-}
-
-return list;
-
-}
-
-function show(){
-
-chapterSelect.value=current;
-
-chapterTitle.textContent=chapters[current].title;
-
-content.textContent=chapters[current].body;
-
-prev.disabled=current===0;
-next.disabled=current===chapters.length-1;
-
-window.scrollTo({
-top:0,
-behavior:"smooth"
-});
-
-}
-
-chapterSelect.onchange=()=>{
-
-current=Number(chapterSelect.value);
-
-show();
-
-};
-
-prev.onclick=()=>{
-
-if(current>0){
-
-current--;
-
-show();
-
-}
-
-};
-
-next.onclick=()=>{
-
-if(current<chapters.length-1){
-
-current++;
-
-show();
-
-}
-
-};
-
-loadVolume();
-
+loadVolume(volume);
 </script>
 
 </body>
