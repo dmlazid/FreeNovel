@@ -3,156 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FreeNovel Converter</title>
-
+<title>FreeNovel One-Click Converter</title>
 <style>
-body{
-  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  background:#f3f3f3;
-  padding:25px;
-}
-.card{
-  max-width:700px;
-  margin:auto;
-  background:white;
-  border-radius:16px;
-  padding:24px;
-}
-h1{
-  color:#00897b;
-  text-align:center;
-}
-button{
-  width:100%;
-  padding:16px;
-  font-size:20px;
-  border:none;
-  border-radius:10px;
-  background:#00897b;
-  color:white;
-  cursor:pointer;
-}
-#log{
-  margin-top:20px;
-  background:#f7f7f7;
-  padding:15px;
-  border-radius:10px;
-  white-space:pre-wrap;
-  font-size:15px;
-}
+body{font-family:system-ui;background:#f3f3f3;margin:0;padding:24px}
+.card{max-width:720px;margin:auto;background:#fff;padding:24px;border-radius:16px}
+h1{color:#00897b;text-align:center}
+input,button{width:100%;padding:14px;font-size:16px;margin-top:12px;border-radius:8px;border:1px solid #ccc}
+button{background:#00897b;color:#fff;border:none;font-weight:600}
+#log{white-space:pre-wrap;background:#f7f7f7;padding:16px;border-radius:8px;margin-top:16px}
 </style>
 </head>
 <body>
 
 <div class="card">
+<h1>📚 One-Click PDF → GitHub</h1>
 
-<h1>📚 Convert All PDFs</h1>
+<input id="token" type="password" placeholder="GitHub Personal Access Token">
 
-<p>This converts every PDF into JSON chapter files automatically.</p>
-
-<button onclick="convertAll()">Convert All</button>
+<button onclick="convertAll()">Convert & Upload</button>
 
 <div id="log">Ready.</div>
-
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-const bookId="new-life-young-again";
+const OWNER="dmlazid";
+const REPO="FreeNovel";
+const BRANCH="main";
+const BOOK="new-life-young-again";
 
 const volumes=[
-  {title:"Volume 1",pdf:"pdfs/new-life-young-again-v1.pdf"},
-  {title:"Volume 2",pdf:"pdfs/new-life-young-again-v2.pdf"},
-  {title:"Volume 3",pdf:"pdfs/new-life-young-again-v3.pdf"}
+["Volume 1","pdfs/new-life-young-again-v1.pdf","v1.json"],
+["Volume 2","pdfs/new-life-young-again-v2.pdf","v2.json"],
+["Volume 3","pdfs/new-life-young-again-v3.pdf","v3.json"]
 ];
 
 const log=document.getElementById("log");
+const write=t=>log.textContent+="\n"+t;
 
-function write(msg){
-  log.textContent+=`\n${msg}`;
+async function pdfText(url){
+ const pdf=await pdfjsLib.getDocument(url).promise;
+ let text="";
+ for(let p=1;p<=pdf.numPages;p++){
+  const page=await pdf.getPage(p);
+  const tc=await page.getTextContent();
+  let y=null;
+  tc.items.forEach(i=>{
+   if(y!==null&&Math.abs(i.transform[5]-y)>8) text+="\n";
+   text+=i.str+" ";
+   y=i.transform[5];
+  });
+  text+="\n\n";
+ }
+ return text
+ .replace(/Table of Contents[\s\S]*?Prologue:/i,"Prologue:")
+ .replace(/Cover/gi,"")
+ .replace(/Color Illustrations/gi,"")
+ .trim();
 }
 
-async function convertVolume(vol,index){
+async function upload(path,obj,token){
 
-  write(`Converting ${vol.title}...`);
+ const api=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`;
 
-  const pdf=await pdfjsLib.getDocument(vol.pdf).promise;
+ let sha=null;
+ const old=await fetch(api,{headers:{Authorization:"token "+token}});
+ if(old.ok) sha=(await old.json()).sha;
 
-  let text="";
+ const content=btoa(unescape(encodeURIComponent(JSON.stringify(obj,null,2))));
 
-  for(let p=1;p<=pdf.numPages;p++){
-
-    const page=await pdf.getPage(p);
-    const tc=await page.getTextContent();
-
-    let lastY=null;
-
-    tc.items.forEach(item=>{
-
-      const y=item.transform[5];
-
-      if(lastY!==null && Math.abs(y-lastY)>8)
-        text+="\n";
-
-      text+=item.str+" ";
-
-      lastY=y;
-
-    });
-
-    text+="\n\n";
-  }
-
-  text=text
-    .replace(/Table of Contents[\s\S]*?Prologue:/i,"Prologue:")
-    .replace(/Cover/gi,"")
-    .replace(/Color Illustrations/gi,"")
-    .trim();
-
-  const json={
-    title:vol.title,
-    text:text
-  };
-
-  const blob=new Blob(
-    [JSON.stringify(json,null,2)],
-    {type:"application/json"}
-  );
-
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`v${index+1}.json`;
-  a.click();
-
-  await new Promise(r=>setTimeout(r,600));
-
-  write(`✓ Downloaded v${index+1}.json`);
+ await fetch(api,{
+  method:"PUT",
+  headers:{
+   Authorization:"token "+token,
+   "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+   message:"Auto convert PDF to JSON",
+   content,
+   branch:BRANCH,
+   sha
+  })
+ });
 
 }
 
 async function convertAll(){
 
-  log.textContent="Starting conversion...\n";
+ const token=document.getElementById("token").value.trim();
 
-  for(let i=0;i<volumes.length;i++){
+ if(!token){
+  alert("Enter GitHub token.");
+  return;
+ }
 
-    try{
-      await convertVolume(volumes[i],i);
-    }catch(e){
-      write(`❌ Failed: ${volumes[i].title}`);
-      write(e.message);
-    }
+ log.textContent="Starting...\n";
 
-  }
+ for(const [title,pdf,file] of volumes){
 
-  write("\nDone!");
-  write("Upload the downloaded files into:");
-  write(`chapters/${bookId}/`);
+  write("Converting "+title+"...");
 
+  const text=await pdfText(pdf);
+
+  await upload(
+   `chapters/${BOOK}/${file}`,
+   {title,text},
+   token
+  );
+
+  write("✓ Uploaded "+file);
+
+ }
+
+ write("\nDone! Refresh your site.");
 }
 </script>
 
