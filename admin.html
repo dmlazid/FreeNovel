@@ -137,6 +137,76 @@ function titleInput(id){
 return document.getElementById(id).value.trim();
 }
 
+document.getElementById("fileInput").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const text = await file.text();
+  document.getElementById("text").value = text;
+});
+
+async function uploadFile(token, repo, path, content) {
+  const url = `https://api.github.com/repos/${repo}/contents/${path}`;
+
+  await fetch(url, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json"
+    },
+    body: JSON.stringify({
+      message: `Upload ${path}`,
+      content: btoa(unescape(encodeURIComponent(content)))
+    })
+  });
+}
+
+async function publish() {
+  const token = document.getElementById("token").value.trim();
+  const repo = document.getElementById("repo").value.trim();
+
+  const title = document.getElementById("title").value.trim();
+  const author = document.getElementById("author").value.trim();
+  const genre = document.getElementById("genre").value.trim();
+  const cover = document.getElementById("cover").value.trim();
+
+  const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+  const raw = document.getElementById("text").value;
+
+  const chapters = raw
+    .split(/(?=Chapter\s+\d+)/i)
+    .filter(x => x.trim());
+
+  const json = {
+    title,
+    author,
+    cover,
+    description: "",
+    chapters: []
+  };
+
+  for (let i = 0; i < chapters.length; i++) {
+    const file = `chapters/${id}/ch${i+1}.txt`;
+
+    await uploadFile(token, repo, file, chapters[i]);
+
+    json.chapters.push({
+      title: `Chapter ${i+1}`,
+      file
+    });
+  }
+
+  await uploadFile(
+  token,
+  repo,
+  `data/${id}.json`,
+  JSON.stringify(json, null, 2)
+);
+
+alert("Novel uploaded! Now add it to data/novels.json.");
+}
+
 </script>
 
 </body>
