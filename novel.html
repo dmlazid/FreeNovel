@@ -1,113 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FreeNovel</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{
-  background:#dfe5e5;
-  font-family:Arial,sans-serif;
-}
-header{
-  background:#00897b;
-  padding:20px;
-}
-header a{
-  color:#fff;
-  text-decoration:none;
-  font-size:42px;
-}
-.container{padding:20px;}
-.card{
-  background:#fff;
-  border-radius:30px;
-  padding:25px;
-  text-align:center;
-}
-.cover{
-  width:220px;
-  border-radius:20px;
-  display:block;
-  margin:0 auto 20px;
-}
-h1{
-  font-size:30px;
-  margin-bottom:12px;
-}
-.info{
-  color:#444;
-  margin:8px 0;
-}
-.volumes{
-  display:flex;
-  flex-direction:column;
-  gap:15px;
-  margin-top:25px;
-}
+body{margin:0;background:#dfe5e5;font-family:Arial}
+header{background:#00897b;padding:18px}
+header a{color:#fff;text-decoration:none;font-size:42px}
+.card{background:#fff;margin:20px;border-radius:25px;padding:20px;text-align:center}
+.cover{width:70%;max-width:280px;border-radius:20px}
 .btn{
-  display:block;
-  background:#00897b;
-  color:#fff;
-  text-decoration:none;
-  padding:18px;
-  border-radius:35px;
-  font-size:22px;
-  font-weight:bold;
+display:block;
+margin:15px auto;
+background:#00897b;
+color:white;
+padding:18px;
+border-radius:35px;
+text-decoration:none;
+font-size:22px;
+font-weight:bold;
 }
 </style>
 </head>
+
 <body>
 
 <header>
-  <a href="index.html">📚 FreeNovel</a>
+<a href="index.html">📚 FreeNovel</a>
 </header>
 
-<div class="container">
-  <div class="card" id="novel">
-    Loading...
-  </div>
-</div>
+<div id="app" class="card">Loading...</div>
 
 <script>
-const params=new URLSearchParams(location.search);
-const id=params.get("id")||"new-life-young-again";
+const id=new URLSearchParams(location.search).get("id");
 
-async function loadNovel(){
+fetch(`data/${id}.json`)
+.then(r=>r.json())
+.then(book=>{
 
-  const data=await fetch(`data/${id}.json`).then(r=>r.json());
+let html=`
+<img class="cover" src="${book.cover}">
+<h1>${book.title}</h1>
+<p>${book.author}</p>
+<p>${book.genre}</p>
+<h2>Volumes</h2>
+`;
 
-  let buttons="";
+book.chapters.forEach((v,i)=>{
+html+=`
+<a class="btn" href="read.html?id=${book.id}&ch=${i+1}">
+${v.title}
+</a>
+`;
+});
 
-  data.chapters.forEach((chapter,index)=>{
-    buttons+=`
-      <a class="btn"
-      href="read.html?id=${id}&ch=${index+1}">
-      ${chapter.title}
-      </a>`;
-  });
+document.getElementById("app").innerHTML=html;
 
-  document.getElementById("novel").innerHTML=`
-    <img class="cover" src="${data.cover}" alt="${data.title}">
-    <h1>${data.title}</h1>
-
-    <p class="info">${data.author}</p>
-    <p class="info">${data.genre}</p>
-    <p class="info">${data.chapters.length} Volumes • Ongoing</p>
-
-    <div class="volumes">
-      ${buttons}
-    </div>
-  `;
-}
-
-loadNovel().catch(()=>{
-  document.getElementById("novel").innerHTML=`
-    <h2>Novel not found</h2>
-    <a class="btn" href="index.html">← Back Home</a>
-  `;
+})
+.catch(()=>{
+document.getElementById("app").innerHTML="<h2>Novel not found.</h2>";
 });
 </script>
 
