@@ -4,60 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FreeNovel</title>
-<link rel="stylesheet" href="assets/css/style.css">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f3}
+header{background:#00897b;color:#fff;padding:16px;font-size:28px;font-weight:bold}
+.container{padding:20px}
+.card{background:#fff;border-radius:20px;padding:20px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.cover{width:220px;max-width:100%;border-radius:12px}
+.btn{display:block;background:#00897b;color:#fff;text-decoration:none;padding:16px;border-radius:30px;margin:12px 0;font-weight:bold}
+</style>
 </head>
-
 <body>
 
-<header>
-  <button type="button" class="logo-btn" onclick="window.location.href='./index.html'">📚 FreeNovel</button>
-  <div class="menu" onclick="history.back()">☰</div>
-</header>
+<header>📚 FreeNovel</header>
 
-<div style="padding:15px;background:white;">
-  <button type="button" class="home-btn" onclick="window.location.href='./index.html'">🏠 Home</button>
-  › <span id="crumb">Novel</span>
-</div>
-
-<div class="book" style="background:white;margin:15px;border-radius:18px;padding:18px;text-align:center;">
-  <img id="cover" style="width:150px;border-radius:12px;">
-  <h2 id="title"></h2>
-  <p id="author"></p>
-  <p id="genre"></p>
-
-  <h3>Chapters</h3>
-  <div id="chapterList"></div>
+<div class="container">
+  <div class="card" id="novel">Loading...</div>
 </div>
 
 <script>
-const id = new URLSearchParams(location.search).get("id");
+const id=new URLSearchParams(location.search).get("id");
 
-fetch("data/novels.json")
-.then(r=>r.json())
-.then(novels=>{
-  const n = novels.find(x=>x.id===id);
-  if(!n) return;
+async function load(){
+ const data=await fetch("data/"+id+".json").then(r=>r.json());
 
-  document.title = n.title + " - FreeNovel";
-  document.getElementById("crumb").innerText = n.title;
-  document.getElementById("cover").src = n.cover;
-  document.getElementById("title").innerText = n.title;
-  document.getElementById("author").innerText = "By " + n.author;
-  document.getElementById("genre").innerText =
-    n.genre + " • " + n.chapters + " Chapters • " + n.status;
-
-  const list = document.getElementById("chapterList");
-  const max = Math.min(n.chapters,20);
-
-  for(let i=1;i<=max;i++){
-    list.innerHTML += `
-      <a class="read"
-         href="reader.html?id=${n.id}&chapter=${i}"
-         style="display:block;margin:10px 0;">
-         Chapter ${i}
-      </a>`;
-  }
-});
+ document.getElementById("novel").innerHTML=`
+ <img class="cover" src="${data.cover}" onerror="this.src='https://placehold.co/300x420?text=No+Cover'">
+ <h1>${data.title}</h1>
+ <p>By ${data.author}</p>
+ <p>${data.genre}</p>
+ <p>${data.chapters.length} Volumes · Ongoing</p>
+ <h2>Volumes</h2>
+ ${data.chapters.map((v,i)=>
+ `<a class="btn" href="reader.html?id=${id}&ch=${i}">${v.title}</a>`
+ ).join("")}
+ `;
+}
+load();
 </script>
 
 </body>
