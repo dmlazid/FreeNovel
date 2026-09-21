@@ -2,20 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FreeNovel</title>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#eef2f3}
-header{background:#00897b;color:#fff;padding:16px;font-size:28px;font-weight:bold}
+header{background:#00897b;padding:16px}
+header a{color:#fff;text-decoration:none;font-size:32px;font-weight:bold;display:flex;align-items:center;gap:10px}
 .container{padding:20px}
-.card{background:#fff;border-radius:20px;padding:20px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.1)}
-.cover{width:220px;max-width:100%;border-radius:12px}
-.btn{display:block;background:#00897b;color:#fff;text-decoration:none;padding:16px;border-radius:30px;margin:12px 0;font-weight:bold}
+.card{background:#fff;border-radius:24px;padding:20px;text-align:center}
+.cover{width:220px;border-radius:14px;margin:auto;display:block}
+.btn{display:block;background:#00897b;color:#fff;text-decoration:none;padding:16px;border-radius:30px;margin:12px 0;font-size:20px}
 </style>
 </head>
 <body>
 
-<header>📚 FreeNovel</header>
+<header>
+  <a href="index.html">📚 FreeNovel</a>
+</header>
 
 <div class="container">
   <div class="card" id="novel">Loading...</div>
@@ -24,22 +27,31 @@ header{background:#00897b;color:#fff;padding:16px;font-size:28px;font-weight:bol
 <script>
 const id=new URLSearchParams(location.search).get("id");
 
-async function load(){
- const data=await fetch("data/"+id+".json").then(r=>r.json());
-
- document.getElementById("novel").innerHTML=`
- <img class="cover" src="${data.cover}" onerror="this.src='https://placehold.co/300x420?text=No+Cover'">
- <h1>${data.title}</h1>
- <p>By ${data.author}</p>
- <p>${data.genre}</p>
- <p>${data.chapters.length} Volumes · Ongoing</p>
- <h2>Volumes</h2>
- ${data.chapters.map((v,i)=>
- `<a class="btn" href="reader.html?id=${id}&ch=${i}">${v.title}</a>`
- ).join("")}
- `;
-}
-load();
+fetch(`data/${id}.json`)
+.then(r=>{
+  if(!r.ok) throw new Error("JSON not found");
+  return r.json();
+})
+.then(data=>{
+  document.getElementById("novel").innerHTML=`
+    <img class="cover" src="${data.cover}" onerror="this.src='https://placehold.co/300x420?text=No+Cover'">
+    <h1>${data.title}</h1>
+    <p><b>${data.author}</b></p>
+    <p>${data.genre}</p>
+    <p>${data.chapters.length} Volumes · Ongoing</p>
+    <h2>Volumes</h2>
+    ${data.chapters.map((v,i)=>`
+      <a class="btn" href="reader.html?id=${id}&ch=${i}">${v.title}</a>
+    `).join("")}
+  `;
+})
+.catch(e=>{
+  document.getElementById("novel").innerHTML=`
+    <h2>Novel not found</h2>
+    <p>${e.message}</p>
+    <a class="btn" href="index.html">⬅ Back Home</a>
+  `;
+});
 </script>
 
 </body>
