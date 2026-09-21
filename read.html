@@ -5,88 +5,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FreeNovel Reader</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-
 body{
-    background:#eef2f1;
-    font-family:'Poppins',sans-serif;
-    color:#333;
+  font-family:'Poppins',sans-serif;
+  background:#eef2f1;
+  color:#2f2f2f;
 }
-
 header{
-    background:#00897b;
-    padding:18px;
-    position:sticky;
-    top:0;
-    z-index:100;
+  background:#00897b;
+  padding:18px;
+  position:sticky;
+  top:0;
 }
-
 header a{
-    color:#fff;
-    text-decoration:none;
-    font-size:32px;
-    font-weight:600;
+  color:#fff;
+  text-decoration:none;
+  font-size:32px;
+  font-weight:600;
 }
-
 .container{
-    max-width:760px;
-    margin:auto;
-    padding:18px;
+  max-width:760px;
+  margin:auto;
+  padding:18px;
 }
-
 .title{
-    color:#00897b;
-    text-align:center;
-    font-size:28px;
-    font-weight:700;
-    text-transform:uppercase;
-    line-height:1.3;
+  text-align:center;
+  color:#00897b;
+  font-size:28px;
+  font-weight:700;
+  text-transform:uppercase;
 }
-
 .subtitle{
-    text-align:center;
-    color:#666;
-    font-size:20px;
-    margin:12px 0 24px;
+  text-align:center;
+  color:#666;
+  font-size:20px;
+  margin:10px 0 25px;
 }
-
 .reader{
-    background:#fff;
-    border-radius:18px;
-    padding:28px;
-    font-size:20px;
-    line-height:2;
-    white-space:pre-wrap;
-    word-break:break-word;
+  background:#fff;
+  border-radius:20px;
+  padding:26px;
+  font-size:19px;
+  line-height:1.95;
+  white-space:pre-wrap;
 }
-
 .nav{
-    display:flex;
-    gap:12px;
-    margin-top:22px;
+  display:flex;
+  gap:12px;
+  margin-top:20px;
 }
-
 .nav a{
-    flex:1;
-    background:#00897b;
-    color:#fff;
-    text-decoration:none;
-    text-align:center;
-    padding:15px;
-    border-radius:10px;
-    font-size:18px;
-    font-weight:600;
-}
-
-@media(max-width:600px){
-.reader{
-font-size:18px;
-padding:22px;
-line-height:1.9;
-}
+  flex:1;
+  text-align:center;
+  text-decoration:none;
+  background:#00897b;
+  color:#fff;
+  padding:15px;
+  border-radius:10px;
+  font-weight:600;
 }
 </style>
 </head>
@@ -94,7 +73,7 @@ line-height:1.9;
 <body>
 
 <header>
-<a href="index.html">📚 FreeNovel</a>
+  <a href="index.html">📚 FreeNovel</a>
 </header>
 
 <div class="container">
@@ -126,25 +105,26 @@ chapterTitle.textContent=chapter.title;
 
 let text=chapter.text;
 
-// Remove TOC, Cover, and Color Illustrations
-text=text
-.replace(/Table of Contents[\s\S]*?(?=Prologue:|Chapter\s*1:)/i,"")
-.replace(/^Cover\s*$/gim,"")
-.replace(/^Color Illustrations\s*$/gim,"");
+// ---------- REAL STORY START ----------
+const prologues=[...text.matchAll(/(^|\n)Prologue:/gm)];
 
-// If two Prologues exist, start from the second one
-const matches=[...text.matchAll(/Prologue:/gi)];
-if(matches.length>=2){
-text=text.slice(matches[1].index);
-}else if(matches.length===1){
-text=text.slice(matches[0].index);
+if(prologues.length>=2){
+  text=text.slice(prologues[1].index);
+}else if(prologues.length===1){
+  text=text.slice(prologues[0].index);
 }else{
-const c1=text.search(/Chapter\s*1:/i);
-if(c1!==-1) text=text.slice(c1);
+  const c1=text.match(/(^|\n)Chapter\s*1:/m);
+  if(c1) text=text.slice(c1.index);
 }
 
-// Remove duplicate blank lines
-text=text.replace(/\n{3,}/g,"\n\n").trim();
+// Remove leftover front matter
+text=text
+.replace(/^Table of Contents[\s\S]*?(?=Prologue:|Chapter\s*1:)/i,"")
+.replace(/^Cover$/gim,"")
+.replace(/^Color Illustrations$/gim,"")
+.replace(/\n{3,}/g,"\n\n")
+.trim();
+// --------------------------------------
 
 content.textContent=text;
 
@@ -159,11 +139,10 @@ next.href=`read.html?id=${id}&ch=${ch+1}`;
 }else{
 next.style.visibility="hidden";
 }
-
 }
 
-load().catch(err=>{
-content.textContent="Error: "+err.message;
+load().catch(e=>{
+content.textContent=e.message;
 });
 </script>
 
